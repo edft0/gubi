@@ -1,5 +1,11 @@
 /* src/App.css */
 
+/* 바디 전체에 심오한 다크 프리미엄 배경 무드 주입 */
+body {
+  background-color: #050507 !important;
+}
+
+/* 모바일 전용 프리미엄 앱 프레임 컨테이너 */
 .onboarding-container {
   display: flex;
   flex-direction: column;
@@ -7,14 +13,30 @@
   justify-content: flex-start;
   min-height: 100vh;
   width: 100%;
-  max-width: 900px;
+  max-width: 430px; /* 아이폰 15 Pro Max 및 메이저 모바일 표준 가로폭 최적화 */
   margin: 0 auto;
-  padding: 60px 24px;
+  padding: 40px 20px;
   box-sizing: border-box;
+  background-color: #09090b; /* 시크한 딥 차콜 블랙 */
+  border-left: 1px solid rgba(255, 255, 255, 0.05);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 60px rgba(0, 0, 0, 0.85);
+  position: relative;
+  overflow: visible;
 }
 
-@media (max-width: 640px) {
+/* 대시보드 상태일 때의 특수 여백 보정 */
+.onboarding-container.dashboard-mode {
+  padding: 24px 16px;
+}
+
+/* 모바일 실제 기기(가로폭 480px 이하)에서는 경계선과 그림자를 없애고 온전한 네이티브 앱 풀스크린으로 확장 */
+@media (max-width: 480px) {
   .onboarding-container {
-    padding: 30px 16px;
+    max-width: 100%;
+    border-left: none;
+    border-right: none;
+    box-shadow: none;
+    padding: 24px 16px;
   }
 }

@@ -332,9 +332,9 @@ export default function Dashboard_Main() {
       {/* 상품 2열 정밀 그리드 */}
       <div style={{
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-        gap: "24px",
-        marginBottom: "48px"
+        gridTemplateColumns: "repeat(2, 1fr)", /* 2열 배치로 아기자기하게 모바일 최적화! */
+        gap: "10px", /* 콤팩트한 갭 조정 */
+        marginBottom: "40px"
       }}>
         {displayedProducts.map((product) => {
           const comp = getComparison(product);
@@ -348,7 +348,7 @@ export default function Dashboard_Main() {
               key={product.id}
               className="glass-card"
               style={{
-                borderRadius: "18px",
+                borderRadius: "14px",
                 overflow: "visible", 
                 display: "flex",
                 flexDirection: "column",
@@ -359,7 +359,7 @@ export default function Dashboard_Main() {
               onClick={() => setSelectedProduct(product)}
               onMouseEnter={(e) => {
                 e.currentTarget.style.borderColor = "var(--primary)";
-                e.currentTarget.style.transform = "translateY(-4px)";
+                e.currentTarget.style.transform = "translateY(-3px)";
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.borderColor = "var(--glass-border)";
@@ -367,19 +367,19 @@ export default function Dashboard_Main() {
                 setHoveredBadgeProductId(null); 
               }}
             >
-              {/* 이미지 썸네일 영역 */}
+              {/* 이미지 썸네일 영역 (모바일 2열에 적합하도록 세로높이 다이어트) */}
               <div style={{
-                height: "200px",
+                height: "120px",
                 background: product.imageColor,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 position: "relative",
-                borderRadius: "18px 18px 0 0",
+                borderRadius: "14px 14px 0 0",
                 overflow: "visible" 
               }}>
                 
-                {/* 뱃지 */}
+                {/* 뱃지 콤팩트화 */}
                 {badge && (
                   <div 
                     onMouseEnter={(e) => {
@@ -391,27 +391,27 @@ export default function Dashboard_Main() {
                     }}
                     style={{
                       position: "absolute",
-                      top: "12px",
-                      left: "12px",
+                      top: "8px",
+                      left: "8px",
                       background: badge.bg,
                       backdropFilter: "blur(4px)",
                       border: badge.border,
                       borderRadius: "50px",
-                      padding: "6px 12px",
-                      fontSize: "11px",
+                      padding: "4px 8px",
+                      fontSize: "9px",
                       fontWeight: "700",
                       color: badge.color,
                       display: "flex",
                       alignItems: "center",
-                      gap: "6px",
-                      boxShadow: "0 4px 10px rgba(0,0,0,0.15)",
+                      gap: "4px",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
                       zIndex: 30, 
                       cursor: "help"
                     }}
                   >
                     <span style={{
-                      width: "5.5px",
-                      height: "5.5px",
+                      width: "4.5px",
+                      height: "4.5px",
                       borderRadius: "50%",
                       background: badge.dot,
                       display: "inline-block"
@@ -420,19 +420,19 @@ export default function Dashboard_Main() {
                   </div>
                 )}
 
-                {/* ⭐ 핵심: 군더더기 캡션과 버튼을 전량 소멸시키고, 오직 아름답고 선명한 2번 청바지 실루엣 분석 아트워크 액자 '그 자체만' 말풍선에 담아 띄우는 프리미엄 미학 패키징! */}
+                {/* 엑스레이 실루엣 분석 말풍선 콤팩트 조율 */}
                 {badge && isBadgeHovered && (
                   <div style={{
                     position: "absolute",
-                    top: "44px", 
-                    left: "12px",
-                    width: "190px", // 텍스트 제거에 부합하도록 가로 너비 콤팩트 다이어트 단행
+                    top: "32px", 
+                    left: "8px",
+                    width: "140px", 
                     background: "rgba(11, 11, 14, 0.99)",
                     backdropFilter: "blur(12px)",
                     border: "1px solid rgba(255,255,255,0.15)",
-                    borderRadius: "14px",
-                    padding: "12px",
-                    boxShadow: "0 15px 35px rgba(0,0,0,0.9)",
+                    borderRadius: "10px",
+                    padding: "8px",
+                    boxShadow: "0 10px 25px rgba(0,0,0,0.8)",
                     zIndex: 50,
                     cursor: "default"
                   }}
@@ -441,10 +441,10 @@ export default function Dashboard_Main() {
                     {/* 말풍선 삼각형 꼬리표 장식 */}
                     <div style={{
                       position: "absolute",
-                      top: "-6px",
-                      left: "24px",
-                      width: "10px",
-                      height: "10px",
+                      top: "-5px",
+                      left: "20px",
+                      width: "8px",
+                      height: "8px",
                       background: "rgba(11, 11, 14, 0.99)",
                       borderTop: "1px solid rgba(255,255,255,0.15)",
                       borderLeft: "1px solid rgba(255,255,255,0.15)",
@@ -455,12 +455,12 @@ export default function Dashboard_Main() {
                     <div style={{
                       position: "relative",
                       width: "100%",
-                      height: "150px",
+                      height: "100px",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       background: "#08080a",
-                      borderRadius: "10px",
+                      borderRadius: "8px",
                       border: "1px solid rgba(255,255,255,0.04)",
                       overflow: "hidden"
                     }}>
@@ -469,12 +469,11 @@ export default function Dashboard_Main() {
                         position: "absolute",
                         top: 0, left: 0, right: 0, bottom: 0,
                         backgroundImage: "linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)",
-                        backgroundSize: "8px 8px"
+                        backgroundSize: "6px 6px"
                       }} />
 
-                      {/* 2번 사진 속 오리지널 바지 실루엣 형상을 완벽 렌더링하는 고정밀 SVG */}
-                      <svg width="110" height="140" viewBox="0 0 100 130" style={{ display: "block" }}>
-                        {/* 1. 파란색 기준 외곽선 */}
+                      {/* 청바지 실루엣 형상을 완벽 렌더링하는 고정밀 SVG */}
+                      <svg width="80" height="100" viewBox="0 0 100 130" style={{ display: "block" }}>
                         <path 
                           d="M 32 10 C 44 9, 56 9, 68 10 C 74 25, 82 45, 86 70 C 83 95, 78 115, 74 125 L 60 125 C 61 105, 56 75, 50 75 C 44 75, 39 105, 40 125 L 26 125 C 22 115, 17 95, 14 70 C 18 45, 26 25, 32 10 Z" 
                           fill="rgba(59, 130, 246, 0.15)" 
@@ -482,10 +481,8 @@ export default function Dashboard_Main() {
                           strokeWidth="2.2"
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          style={{ filter: "drop-shadow(0 0 4px #3b82f6)" }}
+                          style={{ filter: "drop-shadow(0 0 3px #3b82f6)" }}
                         />
-
-                        {/* 2. 빨간색 체형 외곽선 */}
                         <path 
                           d="M 33 12 C 43 11, 57 11, 67 12 C 71 27, 78 47, 81 72 C 77 94, 73 112, 70 123 L 58 123 C 59 103, 54 77, 50 77 C 46 77, 41 103, 42 123 L 30 123 C 27 112, 23 94, 19 72 C 22 47, 29 27, 33 12 Z" 
                           fill="rgba(239, 68, 68, 0.1)" 
@@ -493,10 +490,8 @@ export default function Dashboard_Main() {
                           strokeWidth="1.8"
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          style={{ filter: "drop-shadow(0 0 4px #ef4444)" }}
+                          style={{ filter: "drop-shadow(0 0 3px #ef4444)" }}
                         />
-
-                        {/* 3. 초록색 바지 실루엣 바디 (2번 사진 싱크로율 100%!) */}
                         <path 
                           d="M 34 14 C 42 13, 58 13, 66 14 C 69 29, 74 49, 76 74 C 72 93, 69 110, 67 121 L 56 121 C 57 101, 53 79, 50 79 C 47 79, 43 101, 44 121 L 33 121 C 31 110, 28 93, 24 74 C 26 49, 31 29, 34 14 Z" 
                           fill="rgba(16, 185, 129, 0.52)" 
@@ -504,7 +499,7 @@ export default function Dashboard_Main() {
                           strokeWidth="2.5"
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          style={{ filter: "drop-shadow(0 0 5px #10b981)" }}
+                          style={{ filter: "drop-shadow(0 0 4px #10b981)" }}
                         />
                       </svg>
                     </div>
@@ -514,71 +509,71 @@ export default function Dashboard_Main() {
                 {/* 우측 하단 찜 수량 데코 */}
                 <div style={{
                   position: "absolute",
-                  bottom: "12px",
-                  right: "12px",
+                  bottom: "8px",
+                  right: "8px",
                   background: "rgba(10, 10, 10, 0.5)",
-                  backdropFilter: "blur(2.5px)",
+                  backdropFilter: "blur(2px)",
                   borderRadius: "20px",
-                  padding: "4px 8px",
-                  fontSize: "11px",
+                  padding: "3px 6px",
+                  fontSize: "10px",
                   fontWeight: "600",
                   color: "rgba(255, 255, 255, 0.8)",
                   display: "flex",
                   alignItems: "center",
-                  gap: "3.5px",
+                  gap: "2px",
                   zIndex: 5
                 }}>
                   ♡ {product.likes}
                 </div>
 
-                {/* 기본 제품 큐브 아이콘 */}
-                <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" style={{ zIndex: 1 }}>
+                {/* 기본 제품 큐브 아이콘 콤팩트 */}
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" style={{ zIndex: 1 }}>
                   <path d="M20.38 3.46 16 1.15a2 2 0 0 0-2 0L3.5 6.65a2 2 0 0 0-1 1.72v10.3a2 2 0 0 0 1 1.72L12 22.85a2 2 0 0 0 2 0l8.5-5a2 2 0 0 0 1-1.72V8.37a2 2 0 0 0-1-1.72l-2.12-1.25"/>
                 </svg>
               </div>
 
-              {/* 텍스트 메타 정보 영역 */}
-              <div style={{ padding: "18px", textAlign: "left", flex: 1, display: "flex", flexDirection: "column" }}>
+              {/* 텍스트 메타 정보 영역 콤팩트화 */}
+              <div style={{ padding: "10px", textAlign: "left", flex: 1, display: "flex", flexDirection: "column" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", fontWeight: "700" }}>{product.brand}</span>
-                  <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.5)", fontWeight: "800" }}>{product.size}</span>
+                  <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", fontWeight: "700" }}>{product.brand}</span>
+                  <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.5)", fontWeight: "800" }}>{product.size}</span>
                 </div>
                 
-                <h3 style={{ fontSize: "14.5px", color: "#ffffff", fontWeight: "600", margin: "4px 0 8px 0", height: "42px", overflow: "hidden" }}>
+                <h3 style={{ fontSize: "12px", color: "#ffffff", fontWeight: "600", margin: "2px 0 4px 0", height: "34px", overflow: "hidden", lineHeight: "1.4" }}>
                   {product.name}
                 </h3>
                 
-                <p style={{ fontSize: "16px", fontWeight: "700", color: "#ffffff", marginBottom: "16px" }}>
+                <p style={{ fontSize: "13px", fontWeight: "700", color: "#ffffff", marginBottom: "8px" }}>
                   {product.price} 원
                 </p>
 
-                {/* '등급' 으로 심플 표시 */}
+                {/* '등급' 으로 심플 표시 콤팩트 패키징 */}
                 <div style={{
                   marginTop: "auto",
                   background: "rgba(255, 255, 255, 0.02)",
                   border: "1px solid rgba(255, 255, 255, 0.04)",
-                  borderRadius: "12px",
-                  padding: "10px 14px",
+                  borderRadius: "8px",
+                  padding: "6px 8px",
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center"
                 }}>
-                  <span style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: "700" }}>
+                  <span style={{ fontSize: "10px", color: "var(--text-muted)", fontWeight: "700" }}>
                     등급
                   </span>
                   
-                  {/* 사이즈 S와 헷갈리지 않는 전용 캡슐 칩 뱃지 */}
+                  {/* 사이즈 S와 헷갈리지 않는 전용 캡슐 칩 뱃지 콤팩트화 */}
                   <span style={{
                     background: gradeInfo.bg,
                     border: `1px solid ${gradeInfo.borderColor}`,
                     color: gradeInfo.color,
-                    padding: "5px 12px",
-                    borderRadius: "8px",
-                    fontSize: "12.5px",
+                    padding: "3px 8px",
+                    borderRadius: "6px",
+                    fontSize: "10.5px",
                     fontWeight: "900",
                     letterSpacing: "0.5px",
                     boxShadow: gradeInfo.shadow,
-                    textShadow: "0 1px 2px rgba(0,0,0,0.3)"
+                    textShadow: "0 1px 1px rgba(0,0,0,0.3)"
                   }}>
                     {gradeInfo.grade}
                   </span>

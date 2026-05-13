@@ -23,7 +23,7 @@ function AppContent() {
 
   if (step === "dashboard") {
     return (
-      <div style={{ width: "100%", maxWidth: "1200px", margin: "0 auto", padding: "24px 16px" }}>
+      <div className="onboarding-container dashboard-mode" style={{ width: "100%" }}>
         <Dashboard_Main />
       </div>
     );
@@ -129,10 +129,10 @@ function AppContent() {
   return (
     <div className="onboarding-container">
       {step > 0 && step !== "admin" && (
-        <div style={{ marginBottom: "40px", width: "100%" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-            {/* 상단 타임슬립 프로그레스 인디케이터 바 */}
-            <div style={{ display: "flex", gap: "8px", fontSize: "13px", fontWeight: "600", alignItems: "center" }}>
+        <div style={{ marginBottom: "32px", width: "100%", display: "flex", flexDirection: "column", gap: "12px" }}>
+          {/* 상단 타임슬립 프로그레스 인디케이터 바 (상단 가운데 정렬) */}
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100%" }}>
+            <div style={{ display: "flex", gap: "8px", fontSize: "13px", fontWeight: "600", alignItems: "center", justifyContent: "center" }}>
               <span
                 style={getNavStyle(1)}
                 onClick={() => handleNavClick(1)}
@@ -172,16 +172,15 @@ function AppContent() {
                 설정완료
               </span>
             </div>
-            <span style={{ fontSize: "14px", fontWeight: "700", color: "var(--secondary)" }}>
-              핏 분석 정확도: {accuracy}%
-            </span>
           </div>
 
+          {/* 게이지 바 */}
           <div style={{
             height: "6px",
             background: "rgba(255, 255, 255, 0.05)",
             borderRadius: "10px",
-            overflow: "hidden"
+            overflow: "hidden",
+            width: "100%"
           }}>
             <div style={{
               height: "100%",
@@ -190,6 +189,13 @@ function AppContent() {
               borderRadius: "10px",
               transition: "width 0.4s cubic-bezier(0.16, 1, 0.3, 1)"
             }}></div>
+          </div>
+
+          {/* 핏 분석 정확도 수치를 바 아래쪽으로 이동 */}
+          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "2px" }}>
+            <span style={{ fontSize: "12px", fontWeight: "700", color: "var(--secondary)" }}>
+              핏 분석 정확도: <span style={{ color: "#ffffff", fontWeight: "800" }}>{accuracy}%</span>
+            </span>
           </div>
         </div>
       )}

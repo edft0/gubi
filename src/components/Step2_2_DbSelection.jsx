@@ -199,11 +199,11 @@ export default function Step2_2_DbSelection() {
         })}
       </div>
 
-      {/* 의류 가이드 리스트 그리드 (사이즈 원클릭 버튼 상시 노출 버전) */}
+      {/* 의류 가이드 리스트 그리드 (사이즈 원클릭 버튼 상시 노출 버전 - 2열 콤팩트 최적화!) */}
       <div style={{
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
-        gap: "20px",
+        gridTemplateColumns: "repeat(2, 1fr)", /* 2열 정밀 그리드 이식 */
+        gap: "10px", /* 콤팩트 갭 조율 */
         marginBottom: "40px"
       }}>
         {filteredItems.map((item) => {
@@ -215,65 +215,65 @@ export default function Step2_2_DbSelection() {
               key={item.id}
               className="glass-card"
               style={{
-                borderRadius: "18px",
+                borderRadius: "14px", /* 콤팩트 곡률 */
                 overflow: "hidden",
                 border: `1.5px solid ${isThisItemChosen ? "#ffffff" : "var(--glass-border)"}`,
                 transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
                 display: "flex",
                 flexDirection: "column",
                 background: "rgba(255, 255, 255, 0.02)",
-                padding: "20px",
-                textAlign: "left"
+                padding: "12px 10px", /* 내부 여백 최적화 */
+                textAlign: "center"
               }}
             >
-              {/* 의류 아이콘 이미지 데코 */}
+              {/* 의류 아이콘 이미지 데코 (높이 축소) */}
               <div style={{
-                height: "110px",
+                height: "85px",
                 background: "rgba(255,255,255,0.01)",
-                borderRadius: "12px",
+                borderRadius: "10px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 position: "relative",
-                marginBottom: "16px",
+                marginBottom: "12px",
                 border: "1px solid rgba(255, 255, 255, 0.04)"
               }}>
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "rgba(255, 255, 255, 0.2)" }}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "rgba(255, 255, 255, 0.15)" }}>
                   <path d="M20.38 3.46 16 1.15a2 2 0 0 0-2 0L3.5 6.65a2 2 0 0 0-1 1.72v10.3a2 2 0 0 0 1 1.72L12 22.85a2 2 0 0 0 2 0l8.5-5a2 2 0 0 0 1-1.72V8.37a2 2 0 0 0-1-1.72l-2.12-1.25"/>
                 </svg>
                 <span style={{
                   position: "absolute",
-                  bottom: "8px",
-                  fontSize: "11px",
+                  bottom: "4px",
+                  fontSize: "9px",
                   color: "var(--text-muted)",
                   fontWeight: "700",
-                  letterSpacing: "1px",
-                  background: "rgba(0,0,0,0.3)",
-                  padding: "2px 8px",
+                  letterSpacing: "0.5px",
+                  background: "rgba(0,0,0,0.4)",
+                  padding: "1px 6px",
                   borderRadius: "20px"
                 }}>
                   {item.brand}
                 </span>
               </div>
 
-              {/* 옷 정보 */}
-              <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", marginBottom: "16px" }}>
+              {/* 옷 정보 (텍스트 오버플로우 높이 통일성 정밀 정합!) */}
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", marginBottom: "12px" }}>
                 <div>
-                  <h4 style={{ fontSize: "16px", fontWeight: "800", color: "#ffffff", marginBottom: "4px" }}>
+                  <h4 style={{ fontSize: "12px", fontWeight: "800", color: "#ffffff", marginBottom: "2px", lineHeight: "1.4", height: "34px", overflow: "hidden" }}>
                     {item.name}
                   </h4>
-                  <p style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: "600" }}>
-                    카테고리: {activeTab === "tshirt" ? "티셔츠" : activeTab === "hoodie" ? "후드·맨투맨" : activeTab === "outer" ? "아우터" : "팬츠"}
+                  <p style={{ fontSize: "10px", color: "var(--text-muted)", fontWeight: "600" }}>
+                    {activeTab === "tshirt" ? "티셔츠" : activeTab === "hoodie" ? "후드·맨투맨" : activeTab === "outer" ? "아우터" : "팬츠"}
                   </p>
                 </div>
               </div>
 
-              {/* 하이라이트: 사이즈 칩 버튼 상시 띄워두고 원클릭 자동 매핑 */}
+              {/* 하이라이트: 사이즈 칩 버튼 상시 띄워두고 원클릭 자동 매핑 콤팩트 패키징 */}
               <div>
-                <span style={{ display: "block", fontSize: "11px", color: "var(--text-muted)", fontWeight: "700", marginBottom: "8px" }}>
-                  사이즈 클릭 시 즉시 매핑 완료:
+                <span style={{ display: "block", fontSize: "9px", color: "var(--text-muted)", fontWeight: "700", marginBottom: "6px" }}>
+                  사이즈 클릭 즉시 매핑:
                 </span>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", justifyContent: "center" }}>
                   {item.availableSizes.map((size) => {
                     const isSizeActive = isThisItemChosen && currentlySelected.size === size;
                     return (
@@ -281,13 +281,13 @@ export default function Step2_2_DbSelection() {
                         key={size}
                         onClick={() => handleSizeClick(item, size)}
                         style={{
-                          padding: "8px 12px",
-                          borderRadius: "8px",
+                          padding: "5px 8px",
+                          borderRadius: "6px",
                           border: isSizeActive ? "1.5px solid #ffffff" : "1px solid rgba(255, 255, 255, 0.15)",
                           background: isSizeActive ? "#ffffff" : "transparent",
                           color: isSizeActive ? "#09090b" : "#ffffff",
                           fontWeight: "800",
-                          fontSize: "12px",
+                          fontSize: "11px",
                           cursor: "pointer",
                           transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)"
                         }}
