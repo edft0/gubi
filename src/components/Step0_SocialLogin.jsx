@@ -126,23 +126,18 @@ export default function Step0_SocialLogin() {
           onMouseEnter={(e) => e.currentTarget.style.color = "var(--text-secondary)"}
           onMouseLeave={(e) => e.currentTarget.style.color = "#ffffff"}
         >
-          login
+          log in
         </button>
       </form>
 
-      {/* 심플 가로 선 구분선 (텍스트 제거) */}
+      {/* 심플 단일 가로 선 구분선 */}
       <div style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
         width: "100%",
         maxWidth: "260px",
+        height: "1px",
+        background: "rgba(255,255,255,0.15)",
         marginBottom: "32px"
-      }}>
-        <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.15)" }}></div>
-        <div style={{ width: "30px" }}></div> {/* 가운데 여백만 살짝 주기 */}
-        <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.15)" }}></div>
-      </div>
+      }}></div>
 
       {/* 소셜 로그인 버튼 그룹 (글로우 효과 제거, 오리지널 무광택 복귀) */}
       <div style={{
