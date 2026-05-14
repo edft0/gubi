@@ -1,39 +1,46 @@
 /* src/index.css */
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
 :root {
   /* 프리미엄 미니멀 Monochrome 흑백 테마 */
-  --bg-dark: #09090b; /* 극도의 시크한 딥 차콜 블랙 */
+  --bg-dark: #09090b;
+  /* 극도의 시크한 딥 차콜 블랙 */
   --bg-card: rgba(20, 20, 23, 0.7);
   --bg-input: rgba(28, 28, 30, 0.6);
-  
-  --primary: #ffffff; /* pure white */
+
+  --primary: #ffffff;
+  /* pure white */
   --primary-glow: rgba(255, 255, 255, 0.15);
-  --secondary: #a1a1aa; /* 정돈된 실버 그레이 */
+  --secondary: #a1a1aa;
+  /* 정돈된 실버 그레이 */
   --secondary-glow: rgba(161, 161, 170, 0.15);
-  
-  --accent-gradient: linear-gradient(135deg, #ffffff 0%, #71717a 100%); /* 크롬/실버 그라디언트 */
+
+  --accent-gradient: linear-gradient(135deg, #ffffff 0%, #71717a 100%);
+  /* 크롬/실버 그라디언트 */
   --accent-gradient-hover: linear-gradient(135deg, #ffffff 0%, #a1a1aa 100%);
   --kakao-color: #fee500;
   --apple-color: #ffffff;
-  
+
   --text-primary: #f4f4f5;
   --text-secondary: #a1a1aa;
   --text-muted: #52525b;
-  
+
   --border-color: rgba(255, 255, 255, 0.08);
   --border-focus: rgba(255, 255, 255, 0.35);
-  
+
   --glass-bg: rgba(15, 15, 17, 0.75);
   --glass-border: rgba(255, 255, 255, 0.08);
   --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6);
-  
+
   --radius-lg: 16px;
   --radius-md: 10px;
   --radius-sm: 6px;
-  
+
   --font-sans: 'Outfit', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  
+  --font-pixel: 'Press Start 2P', system-ui, cursive;
+  /* 레트로 픽셀 아트 전용 폰트 */
+
   font-family: var(--font-sans);
   background-color: var(--bg-dark);
   color: var(--text-primary);
@@ -46,7 +53,7 @@ body {
   padding: 0;
   box-sizing: border-box;
   background-color: var(--bg-dark);
-  background-image: 
+  background-image:
     radial-gradient(at 10% 20%, rgba(255, 255, 255, 0.015) 0px, transparent 50%),
     radial-gradient(at 90% 80%, rgba(255, 255, 255, 0.025) 0px, transparent 50%);
   background-attachment: fixed;
@@ -64,37 +71,67 @@ body {
 ::-webkit-scrollbar {
   width: 5px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.1);
   border-radius: 10px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
 }
 
 /* Animations */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-6px); }
-  100% { transform: translateY(0px); }
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
 }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 15px rgba(255, 255, 255, 0.08); }
-  50% { box-shadow: 0 0 25px rgba(255, 255, 255, 0.2); }
+
+  0%,
+  100% {
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.08);
+  }
+
+  50% {
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.2);
+  }
 }
 
 @keyframes checkmark {
-  0% { stroke-dashoffset: 50; }
-  100% { stroke-dashoffset: 0; }
+  0% {
+    stroke-dashoffset: 50;
+  }
+
+  100% {
+    stroke-dashoffset: 0;
+  }
 }
 
 .animate-fade-in {
@@ -147,7 +184,8 @@ body {
 /* Styled Buttons */
 .btn-primary {
   background: var(--accent-gradient);
-  color: #09090b; /* 시크한 흑백 대비 짙은 차콜 텍스트 */
+  color: #09090b;
+  /* 시크한 흑백 대비 짙은 차콜 텍스트 */
   border: none;
   padding: 14px 28px;
   font-size: 15px;
