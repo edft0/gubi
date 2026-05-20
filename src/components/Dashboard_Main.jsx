@@ -309,22 +309,11 @@ export default function Dashboard_Main() {
       category: "outer",
       price: "169,000",
       size: "l",
+      image: "/adidas_2.png",
       availableSizes: ["M", "L", "XL"],
       likes: 88,
       type: "outer",
       measurements: { shoulder: 49, chest: 57, length: 70, sleeve: 63 }
-    },
-    {
-      id: "prod18",
-      brand: "Musinsa Standard",
-      name: "무신사 스탠다드 시티 레저 후드 라이트 다운 자켓 클라우디 블루 (Light Down Jacket)",
-      category: "outer",
-      price: "99,900",
-      size: "l",
-      availableSizes: ["M", "L", "XL"],
-      likes: 19,
-      type: "outer",
-      measurements: { shoulder: 50, chest: 58, length: 71, sleeve: 64 }
     },
     {
       id: "prod19",
@@ -333,6 +322,7 @@ export default function Dashboard_Main() {
       category: "outer",
       price: "245,000",
       size: "l",
+      image: "/di_1.png",
       availableSizes: ["M", "L", "XL"],
       likes: 31,
       type: "outer",
@@ -343,29 +333,82 @@ export default function Dashboard_Main() {
     // 4. [바지] - pants (유저 보존용)
     // ------------------------------------------
     {
-      id: "prod20",
-      brand: "Levi's",
-      name: "리바이스 501 오리지널 스트레이트 데님 (Original Denim Pants)",
+      id: "prod26",
+      brand: "Slow Record House",
+      name: "슬로우 레코드 하우스 카펜터 버뮤다 와이드 카모 팬츠 빈티지 그린",
       category: "pants",
-      price: "129,000",
-      size: "32",
-      availableSizes: ["30", "32", "34"],
-      likes: 35,
+      price: "138,000",
+      size: "m",
+      image: "/carp_1.png",
+      availableSizes: ["S", "M", "L"],
+      likes: 34,
       type: "pants",
-      measurements: { shoulder: 41, chest: 33, length: 101, sleeve: 29 }
+      measurements: { shoulder: 37.5, chest: 36.5, length: 57.5, sleeve: 33 }
     },
     {
-      id: "prod21",
-      brand: "Bape",
-      name: "베이프 카모 와이드 카고 팬츠 (Camo Wide Cargo Pants)",
+      id: "prod27",
+      brand: "Needles",
+      name: "니들스 H.D. 트랙 팬츠 폴리 스무스 블랙 화이트",
       category: "pants",
-      price: "345,000",
-      size: "m",
-      image: "/bape1.png",
-      availableSizes: ["S", "M"],
-      likes: 22,
+      price: "379,000",
+      size: "s",
+      image: "/ni_1.png",
+      availableSizes: ["XS", "S", "M", "L"],
+      likes: 92,
       type: "pants",
-      measurements: { shoulder: 40, chest: 35, length: 98, sleeve: 28 }
+      measurements: { shoulder: 40, chest: 43, length: 105, sleeve: 36 }
+    },
+    {
+      id: "prod28",
+      brand: "Amou",
+      name: "아모우 홀스 원턱 버뮤다 팬츠 블랙",
+      category: "pants",
+      price: "89,000",
+      size: "m",
+      image: "/a_1.png",
+      availableSizes: ["S", "M", "L"],
+      likes: 41,
+      type: "pants",
+      measurements: { shoulder: 38.5, chest: 35.7, length: 57, sleeve: 32 }
+    },
+    {
+      id: "prod29",
+      brand: "Carhartt WIP",
+      name: "칼하트 WIP 로버트슨 데님 랜든 팬츠 블루 린스드",
+      category: "pants",
+      price: "168,000",
+      size: "30",
+      image: "/car_2.png",
+      availableSizes: ["28", "30", "32", "34"],
+      likes: 57,
+      type: "pants",
+      measurements: { shoulder: 40.5, chest: 33.7, length: 103, sleeve: 30 }
+    },
+    {
+      id: "prod30",
+      brand: "Coyseio",
+      name: "코이세이오 038 스트라이프 스커트 다크 그레이",
+      category: "pants",
+      price: "145,000",
+      size: "s",
+      image: "/co_1.png",
+      availableSizes: ["S", "M"],
+      likes: 28,
+      type: "pants",
+      measurements: { shoulder: 33, chest: 44, length: 78, sleeve: 0 }
+    },
+    {
+      id: "prod31",
+      brand: "Nike x Stussy",
+      name: "나이키x스투시 NRG RA 플리스 팬츠 다크 그레이 헤더",
+      category: "pants",
+      price: "219,000",
+      size: "m",
+      image: "/nike_2.png",
+      availableSizes: ["XS", "S", "M", "L", "XL"],
+      likes: 84,
+      type: "pants",
+      measurements: { shoulder: 39, chest: 34, length: 98, sleeve: 32 }
     },
 
     // ------------------------------------------
@@ -1640,7 +1683,7 @@ export default function Dashboard_Main() {
         ) : (
           // 장바구니에 아이템이 존재할 때
           <div style={{ display: "flex", flexDirection: "column", gap: "16px", flex: 1 }}>
-            
+
             {/* 전체 선택 및 선택 삭제 헤더 컨트롤 */}
             <div style={{
               display: "flex",
@@ -2907,8 +2950,8 @@ export default function Dashboard_Main() {
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
                   <span>item:</span>
                   <span style={{ maxWidth: "160px", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
-                    {activeCheckoutItems.length === 1 
-                      ? activeCheckoutItems[0].name 
+                    {activeCheckoutItems.length === 1
+                      ? activeCheckoutItems[0].name
                       : `${activeCheckoutItems[0].name} 외 ${activeCheckoutItems.length - 1}개`}
                   </span>
                 </div>
