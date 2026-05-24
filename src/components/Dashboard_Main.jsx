@@ -1,6 +1,7 @@
 // src/components/Dashboard_Main.jsx
 import React, { useState, useEffect } from "react";
 import { useFitProfile } from "../context/FitProfileContext";
+import SilhouetteCompare from "../SilhouetteCompare";
 
 export default function Dashboard_Main() {
   const { profile, logout, setStep, updateBasicInfo } = useFitProfile();
@@ -60,6 +61,76 @@ export default function Dashboard_Main() {
   const [resellDefect, setResellDefect] = useState("none"); // 'none' | 'some' | 'yes'
   const [resellPrice, setResellPrice] = useState("248,000");
   const [queueTab, setQueueTab] = useState("alert"); // 'detail' | 'alert'
+  const [showQueueModal, setShowQueueModal] = useState(false); // [추가] 줄서기 제품 모달 팝업 상태
+
+  // [추가] 내가 구매한 실제 제품 목록 및 원클릭 재판매 등록용 현재 선택된 상품 상태
+  const [purchasedItems, setPurchasedItems] = useState([
+    {
+      id: "prod27",
+      brand: "Needles",
+      name: "니들스 H.D. 트랙 팬츠 폴리 스무스 블랙 화이트",
+      category: "pants",
+      price: "379,000",
+      size: "S",
+      image: "/ni_1.png",
+      measurements: { length: "105cm", shoulder: "40cm", chest: "43cm", sleeve: "36cm", hem: "24cm" }
+    },
+    {
+      id: "prod26",
+      brand: "Slow Record House",
+      name: "슬로우 레코드 하우스 카펜터 버뮤다 와이드 카모 팬츠 빈티지 그린",
+      category: "pants",
+      price: "158,000",
+      size: "M",
+      image: "/carp_1.png",
+      measurements: { length: "57.5cm", shoulder: "37.5cm", chest: "36.5cm", sleeve: "33cm", hem: "31cm" }
+    },
+    {
+      id: "prod31",
+      brand: "Nike x Stussy",
+      name: "나이키x스투시 NRG RA 플리스 팬츠 다크 그레이 헤더",
+      category: "pants",
+      price: "219,000",
+      size: "M",
+      image: "/nike_2.png",
+      measurements: { length: "98cm", shoulder: "39cm", chest: "34cm", sleeve: "32cm", hem: "22cm" }
+    }
+  ]);
+  const [selectedResellItem, setSelectedResellItem] = useState(null);
+
+  // [추가] 현재 선택된 줄서기 아이템 ID 상태
+  const [selectedQueueItemId, setSelectedQueueItemId] = useState(null);
+
+  // [추가] 내가 줄서기 대기 신청한 상품 목록 상태 (초기값: 니들스 팬츠, 나이키 스투시 팬츠 - 장바구니 바이브)
+  const [queuedItems, setQueuedItems] = useState([
+    {
+      id: "prod27",
+      brand: "Needles",
+      name: "니들스 H.D. 트랙 팬츠 폴리 스무스 블랙 화이트",
+      price: "379,000",
+      image: "/ni_1.png",
+      category: "pants",
+      size: "S",
+      measurements: { length: "105cm", shoulder: "40cm", chest: "43cm", sleeve: "36cm", hem: "24cm" }
+    },
+    {
+      id: "prod31",
+      brand: "Nike x Stussy",
+      name: "나이키x스투시 NRG RA 플리스 팬츠 다크 그레이 헤더",
+      price: "219,000",
+      image: "/nike_2.png",
+      category: "pants",
+      size: "M",
+      measurements: { length: "98cm", shoulder: "39cm", chest: "34cm", sleeve: "32cm", hem: "22cm" }
+    }
+  ]);
+
+  // [추가] 모바일용 커스텀 줄서기 취소 확인 팝업 상태
+  const [showCancelConfirmModal, setShowCancelConfirmModal] = useState(false);
+  const [cancelTargetItem, setCancelTargetItem] = useState(null);
+
+  // [추가] 핏 싱크로율 판정 기준 가이드 팝업 모달 상태
+  const [showFitGuideModal, setShowFitGuideModal] = useState(false);
 
   // [추가] 프로필 편집 전용 제어 상태값
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -110,7 +181,8 @@ export default function Dashboard_Main() {
       availableSizes: ["M", "L", "XL"],
       likes: 31,
       type: "tee",
-      measurements: { shoulder: 46, chest: 51, length: 70, sleeve: 21 }
+      measurements: { shoulder: 46, chest: 51, length: 70, sleeve: 21 },
+      isSold: true
     },
     {
       id: "prod3",
@@ -313,7 +385,8 @@ export default function Dashboard_Main() {
       availableSizes: ["M", "L", "XL"],
       likes: 88,
       type: "outer",
-      measurements: { shoulder: 49, chest: 57, length: 70, sleeve: 63 }
+      measurements: { shoulder: 49, chest: 57, length: 70, sleeve: 63 },
+      isSold: true
     },
     {
       id: "prod19",
@@ -334,12 +407,12 @@ export default function Dashboard_Main() {
     // ------------------------------------------
     {
       id: "prod26",
-      brand: "Slow Record House",
-      name: "슬로우 레코드 하우스 카펜터 버뮤다 와이드 카모 팬츠 빈티지 그린",
+      brand: "Adidas",
+      name: "아디다스 아딜레늄 5.0 디컨스트럭티드 데님 팬츠 라이트 블루",
       category: "pants",
       price: "138,000",
       size: "m",
-      image: "/carp_1.png",
+      image: "/adidas_3.png",
       availableSizes: ["S", "M", "L"],
       likes: 34,
       type: "pants",
@@ -356,16 +429,17 @@ export default function Dashboard_Main() {
       availableSizes: ["XS", "S", "M", "L"],
       likes: 92,
       type: "pants",
-      measurements: { shoulder: 40, chest: 43, length: 105, sleeve: 36 }
+      measurements: { shoulder: 40, chest: 43, length: 105, sleeve: 36 },
+      isSold: true
     },
     {
       id: "prod28",
-      brand: "Amou",
-      name: "아모우 홀스 원턱 버뮤다 팬츠 블랙",
+      brand: "Nomanual",
+      name: "노매뉴얼 로우 비전 데님 팬츠 워시드 블랙",
       category: "pants",
       price: "89,000",
       size: "m",
-      image: "/a_1.png",
+      image: "/no_1.png",
       availableSizes: ["S", "M", "L"],
       likes: 41,
       type: "pants",
@@ -386,12 +460,12 @@ export default function Dashboard_Main() {
     },
     {
       id: "prod30",
-      brand: "Coyseio",
-      name: "코이세이오 038 스트라이프 스커트 다크 그레이",
+      brand: "Zara x Ader Error",
+      name: "자라 x 아더에러 패치워크 진 블루",
       category: "pants",
       price: "145,000",
       size: "s",
-      image: "/co_1.png",
+      image: "/zara_1.png",
       availableSizes: ["S", "M"],
       likes: 28,
       type: "pants",
@@ -408,7 +482,8 @@ export default function Dashboard_Main() {
       availableSizes: ["XS", "S", "M", "L", "XL"],
       likes: 84,
       type: "pants",
-      measurements: { shoulder: 39, chest: 34, length: 98, sleeve: 32 }
+      measurements: { shoulder: 39, chest: 34, length: 98, sleeve: 32 },
+      isSold: true
     },
 
     // ------------------------------------------
@@ -613,44 +688,48 @@ export default function Dashboard_Main() {
     }
   };
 
-  // 유저의 동적 치수 산출 헬퍼
+  // 유저의 동적 치수 산출 헬퍼 (다중 카테고리 개별 검수 및 온보딩 완벽 지원!)
   const getUserMeasurements = (prodCategory) => {
-    const userHeight = Number(basicInfo?.height) || 175;
-    const userWeight = Number(basicInfo?.weight) || 70;
-
-    if (measureMethod === "direct" && directMeasure) {
-      if (directMeasure.category === prodCategory) {
-        return {
-          shoulder: Number(directMeasure.shoulder) || 48,
-          chest: Number(directMeasure.chest) || 54,
-          length: Number(directMeasure.length) || 71,
-          sleeve: Number(directMeasure.sleeve) || 0
-        };
-      }
-    } else if (measureMethod === "db" && dbMeasure && dbMeasure.selectedItem) {
-      if (dbMeasure.category === prodCategory) {
-        return dbMeasure.selectedItem.measurements || { shoulder: 48, chest: 54, length: 71, sleeve: 61 };
-      }
-    }
-
-    const heightFactor = userHeight / 175;
-    const weightFactor = userWeight / 70;
-
-    if (prodCategory === "pants") {
+    // 1. 브랜드 DB 선택 값 검사 (profile.dbMeasures[prodCategory] 연동!)
+    const dbItem = profile?.dbMeasures?.[prodCategory];
+    if (dbItem && !dbItem.isSkipped && dbItem.measurements) {
       return {
-        shoulder: Math.round(39 * heightFactor) || 39,
-        chest: Math.round(32 * weightFactor) || 32,
-        length: Math.round(100 * heightFactor) || 100,
-        sleeve: Math.round(29 * heightFactor) || 29
+        ...dbItem.measurements,
+        category: prodCategory
       };
     }
 
-    return {
-      shoulder: Math.round(48 * heightFactor) || 48,
-      chest: Math.round(54 * weightFactor) || 54,
-      length: Math.round(71 * heightFactor) || 71,
-      sleeve: Math.round(61 * heightFactor) || 61
-    };
+    // 2. 직접 실측 입력값 검사 (profile.directMeasures[prodCategory] 연동!)
+    const d = profile?.directMeasures?.[prodCategory];
+    if (d) {
+      if (prodCategory === "pants") {
+        const hasDirectPants = Number(d.length) > 0 && Number(d.waist) > 0;
+        if (hasDirectPants) {
+          return {
+            length: Number(d.length),
+            shoulder: Number(d.waist), // pants-shoulder waist 매핑 준수!
+            chest: Number(d.thigh) || Number(d.hip) * 0.5 || 32, // pants-chest thigh 매핑!
+            sleeve: Number(d.rise) || 29, // pants-sleeve rise 매핑!
+            category: "pants"
+          };
+        }
+      } else {
+        const hasDirectTop = Number(d.length) > 0 && Number(d.shoulder) > 0 && Number(d.chest) > 0;
+        if (hasDirectTop) {
+          return {
+            length: Number(d.length),
+            shoulder: Number(d.shoulder),
+            chest: Number(d.chest),
+            sleeve: Number(d.sleeve) || 0,
+            category: prodCategory
+          };
+        }
+      }
+    }
+
+    // 3. 만약 사용자가 이 카테고리를 설정하지 않았거나 스킵(해당 없음)한 경우!
+    // 억지로 가상 치수를 내보내지 않고, 예외 뷰(격자판 가이드)를 위해 비활성 무효 0 객체 반환!
+    return { shoulder: 0, chest: 0, length: 0, sleeve: 0, category: "none" };
   };
 
   const getProductMaxDiff = (product) => {
@@ -936,8 +1015,31 @@ export default function Dashboard_Main() {
           position: "relative",
           background: "#f3f4f6",
           borderBottom: "2px solid #000000",
-          overflow: "hidden"
+          overflow: "hidden",
+          filter: product.isSold ? "grayscale(100%) opacity(0.65)" : "none"
         }}>
+          {/* 판매완료 오버레이 배지 (SOLD OUT) */}
+          {product.isSold && (
+            <div style={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              background: "rgba(0, 0, 0, 0.75)",
+              color: "#ffffff",
+              padding: "4px 10px",
+              fontSize: "10px",
+              fontFamily: "var(--font-pixel), monospace",
+              fontWeight: "bold",
+              borderRadius: "4px",
+              border: "1.5px solid #ffffff",
+              zIndex: 5,
+              whiteSpace: "nowrap",
+              pointerEvents: "none"
+            }}>
+              SOLD OUT
+            </div>
+          )}
           {/* good/warn 픽셀 태그 칼 정렬 (마우스 호버 이벤트 연결 및 가상 피팅 지원 상품만 활성화!) */}
           {isFitSupported && (
             <div
@@ -967,24 +1069,68 @@ export default function Dashboard_Main() {
           {hoveredBadgeProductId === product.id && badge && (
             <div style={{
               position: "absolute",
-              top: "28px",
-              left: "8px",
-              background: "rgba(0, 0, 0, 0.95)",
+              top: "24px",
+              left: "6px",
+              background: "rgba(10, 10, 12, 0.96)",
               color: "#ffffff",
-              border: "1px solid #ffffff",
-              padding: "8px 10px",
-              zIndex: 100,
-              width: "135px",
+              border: "1.5px solid #ffffff",
+              padding: "8px 8px",
+              zIndex: 1000, // 카드를 덮는 최상위 팝업
+              width: "140px",
               pointerEvents: "none",
-              boxShadow: "0 4px 10px rgba(0,0,0,0.5)"
+              boxShadow: "0 10px 25px rgba(0,0,0,0.65)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "6px",
+              borderRadius: "4px"
             }}>
-              <div style={{ fontSize: "7px", fontFamily: "var(--font-pixel)", color: "#ef4444", marginBottom: "4px", fontWeight: "bold" }}>
-                FIT WARNING
+              <div style={{ fontSize: "7px", fontFamily: "var(--font-pixel)", color: "#10b981", letterSpacing: "0.2px", fontWeight: "900" }}>
+                FIT SILHOUETTE
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: "3px", fontSize: "8.5px" }}>
-                <div>어깨차이: {comp.shoulderDiff > 0 ? `+${comp.shoulderDiff}` : comp.shoulderDiff}cm</div>
-                <div>가슴차이: {comp.chestDiff > 0 ? `+${comp.chestDiff}` : comp.chestDiff}cm</div>
-                <div>총장차이: {comp.lengthDiff > 0 ? `+${comp.lengthDiff}` : comp.lengthDiff}cm</div>
+
+              {/* 💡 2D 실루엣 정밀 축소 드로잉 (isMini=true 프롭 장착!) */}
+              <div style={{ 
+                width: "100%", 
+                height: "100px", 
+                overflow: "hidden", 
+                background: "#000000",
+                border: "1px solid rgba(255,255,255,0.15)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: "3px"
+              }}>
+                <div style={{ 
+                  transform: "scale(0.85)", 
+                  width: "100%", 
+                  height: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center"
+                }}>
+                  <SilhouetteCompare 
+                    category={product.category}
+                    userMeasure={getUserMeasurements(product.category)}
+                    productMeasure={product.measurements}
+                    isMini={true}
+                  />
+                </div>
+              </div>
+
+              {/* 🚦 초록 잘 맞음, 노랑 약간 차이, 빨강 주의 3색 신호등 범례 */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "7.5px", fontWeight: "bold", borderTop: "1px solid rgba(255,255,255,0.15)", paddingTop: "5px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "4.5px", color: "#22c55e" }}>
+                  <span style={{ width: "4.5px", height: "4.5px", borderRadius: "50%", background: "#22c55e" }} />
+                  초록 잘 맞음
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "4.5px", color: "#f59e0b" }}>
+                  <span style={{ width: "4.5px", height: "4.5px", borderRadius: "50%", background: "#f59e0b" }} />
+                  노랑 약간 차이
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "4.5px", color: "#ef4444" }}>
+                  <span style={{ width: "4.5px", height: "4.5px", borderRadius: "50%", background: "#ef4444" }} />
+                  빨강 주의
+                </div>
               </div>
             </div>
           )}
@@ -2053,16 +2199,16 @@ export default function Dashboard_Main() {
           </div>
         </div>
 
-        {/* 5. 실루엣 삼각 비교 패널 (내 기준 옷 / 오버레이 비교 그래픽판 / AI 지표 일치율) */}
+        {/* 5. 실루엣 비교 종합 패널 (좌: 비교군 정보 칩, 우: AI 분석 일치율 요약) */}
         <div style={{
           display: "grid",
-          gridTemplateColumns: "96px 1fr 132px",
+          gridTemplateColumns: "1fr 1.1fr",
           gap: "12px",
-          alignItems: "center",
-          marginBottom: "24px"
+          alignItems: "stretch",
+          marginBottom: "14px"
         }}>
           {/* 좌열: 기준옷과 상품 2개 박스형 비교군 */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px", justifyContent: "center" }}>
             {/* 박스 A: 내 기준 옷 */}
             <div style={{
               border: "1px solid #e4e4e7",
@@ -2070,15 +2216,14 @@ export default function Dashboard_Main() {
               padding: "8px 10px",
               display: "flex",
               alignItems: "center",
-              gap: "6px",
-              borderRadius: "0px"
+              gap: "6px"
             }}>
               <div style={{ width: "20px", height: "20px", display: "flex", alignItems: "center", justifyContent: "center", background: "#ffffff", border: "1px solid #e4e4e7" }}>
                 {isP ? "👖" : "👕"}
               </div>
               <div style={{ display: "flex", flexDirection: "column", textAlign: "left" }}>
                 <span style={{ fontSize: "7px", color: "#71717a" }}>내 기준 옷</span>
-                <span style={{ fontSize: "8.5px", fontWeight: "bold", color: "#18181b", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "52px" }}>
+                <span style={{ fontSize: "8.5px", fontWeight: "bold", color: "#18181b", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "70px" }}>
                   {isP ? "데님 팬츠" : "오버핏 티셔츠"}
                 </span>
               </div>
@@ -2091,91 +2236,71 @@ export default function Dashboard_Main() {
               padding: "8px 10px",
               display: "flex",
               alignItems: "center",
-              gap: "6px",
-              borderRadius: "0px"
+              gap: "6px"
             }}>
               <div style={{ width: "20px", height: "20px", display: "flex", alignItems: "center", justifyContent: "center", background: "#ffffff", border: "1px solid #e4e4e7" }}>
                 {isP ? "👖" : "👕"}
               </div>
               <div style={{ display: "flex", flexDirection: "column", textAlign: "left" }}>
                 <span style={{ fontSize: "7px", color: "#10b981", fontWeight: "bold" }}>상품</span>
-                <span style={{ fontSize: "8.5px", fontWeight: "bold", color: "#18181b", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "52px" }}>
+                <span style={{ fontSize: "8.5px", fontWeight: "bold", color: "#18181b", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "70px" }}>
                   {selectedProduct.brand} {isP ? "바지" : "티셔츠"}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* 중열: 모눈 격자 제도판 배경 위에 오버레이 드로잉 SVG */}
-          <div style={{
-            height: "124px",
-            background: "radial-gradient(#e5e7eb 1px, transparent 1px)",
-            backgroundSize: "8px 8px",
-            border: "1px solid #f4f4f5",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            position: "relative"
-          }}>
-            {isP ? (
-              <svg width="74" height="100" viewBox="0 0 100 100">
-                {/* 회색 실루엣 (내 기준 옷) */}
-                <path d="M 40,15 L 60,15 L 64,45 L 64,88 L 52,88 L 52,50 L 48,50 L 48,88 L 36,88 L 36,45 Z" fill="none" stroke="#d1d5db" strokeWidth="2.5" strokeLinejoin="round" />
-                {/* 녹색/적색/청색 혼합 실루엣 (상품 옷 피팅 스펙) */}
-                <path d="M 38,13 L 62,13 L 66,45 L 66,90 L 53,90 L 53,52 L 47,52 L 47,90 L 34,90 L 34,45 Z" fill="none" stroke="#10b981" strokeWidth="2" strokeLinejoin="round" />
-                {/* 허리 부분 다소 타이트함 (적색 하이라이트) */}
-                <line x1="34" y1="13" x2="66" y2="13" stroke="#ef4444" strokeWidth="3" />
-                {/* 총장 여유로움 (청색 하이라이트) */}
-                <line x1="34" y1="90" x2="47" y2="90" stroke="#3b82f6" strokeWidth="3" />
-                <line x1="53" y1="90" x2="66" y2="90" stroke="#3b82f6" strokeWidth="3" />
-              </svg>
-            ) : (
-              <svg width="84" height="100" viewBox="0 0 100 100">
-                {/* 회색 실루엣 (내 기준 옷) */}
-                <path d="M 32,30 L 48,22 Q 54,28 60,28 Q 66,28 72,22 L 88,30 L 83,50 L 76,48 L 76,90 L 44,90 L 44,48 L 37,50 Z" fill="none" stroke="#d1d5db" strokeWidth="2.5" strokeLinejoin="round" />
-                {/* 어깨가 약간 타이트함 (적색 하이라이트) */}
-                <path d="M 34,30 L 48,22 Q 54,28 60,28 Q 66,28 72,22 L 86,30" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" />
-                {/* 가슴/품은 적당함 (녹색 실루엣) */}
-                <path d="M 37,50 L 44,48 L 44,90 L 76,90 L 76,48 L 83,50" fill="none" stroke="#10b981" strokeWidth="2" strokeLinejoin="round" />
-                {/* 총장은 넉넉함 (청색 하이라이트) */}
-                <line x1="44" y1="90" x2="76" y2="90" stroke="#3b82f6" strokeWidth="3.5" />
-              </svg>
-            )}
-          </div>
-
           {/* 우열: AI 추천 핏 설명 + 일치도 10개 서클 점수판 */}
-          <div style={{ display: "flex", flexDirection: "column", textAlign: "left", paddingLeft: "4px" }}>
-            <div style={{ fontSize: "9.5px", fontWeight: "bold", color: "#ef4444", marginBottom: "4.5px" }}>
-              {isP ? "허리가 약간 타이트합니다." : "어깨가 약간 작습니다."}
+          <div style={{ display: "flex", flexDirection: "column", textAlign: "left", padding: "10px 12px", background: "#f4f4f5", borderRadius: "10px", justifyContent: "center" }}>
+            <div style={{ fontSize: "9px", fontWeight: "900", color: "#ef4444", marginBottom: "3px", letterSpacing: "-0.3px" }}>
+              {isP ? "⚠️ 허리가 약간 타이트합니다." : "⚠️ 어깨가 약간 작습니다."}
             </div>
-            <div style={{ fontSize: "9.5px", fontWeight: "bold", color: "#10b981", marginBottom: "14px" }}>
-              {isP ? "허벅지는 잘 맞습니다." : "총장은 여유 있습니다."}
-            </div>
-
-            {/* 핏 적합도 & 물음표 */}
-            <div style={{ display: "flex", alignItems: "center", gap: "3px", marginBottom: "4px" }}>
-              <span style={{ fontSize: "9.5px", fontWeight: "bold", color: "#71717a" }}>핏 적합도</span>
-              <span style={{
-                width: "11px",
-                height: "11px",
-                borderRadius: "50%",
-                border: "0.8px solid #a1a1aa",
-                color: "#71717a",
-                fontSize: "7.5px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontWeight: "bold"
-              }}>?</span>
+            <div style={{ fontSize: "9px", fontWeight: "900", color: "#10b981", marginBottom: "10px", letterSpacing: "-0.3px" }}>
+              {isP ? "✨ 허벅지는 잘 맞습니다." : "✨ 총장은 여유 있습니다."}
             </div>
 
-            {/* 거대한 픽셀풍 적합 비율 수치 (눈부신 초록색!) */}
-            <div style={{ fontSize: "24px", fontWeight: "900", color: "#10b981", fontFamily: "var(--font-pixel)", lineHeight: "1", marginBottom: "8px" }}>
-              {matchRate}%
+            {/* 핏 적합도 & 거대한 픽셀풍 적합 비율 수치 병렬 배치 */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "2px", marginBottom: "4px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                <span style={{ fontSize: "9px", fontWeight: "bold", color: "#71717a" }}>핏 적합도</span>
+                {/* ⓘ 도움말 안내 가이드 버튼 탑재! */}
+                <span 
+                  onClick={() => setShowFitGuideModal(true)}
+                  style={{
+                    width: "11px",
+                    height: "11px",
+                    borderRadius: "50%",
+                    border: "1.2px solid #a1a1aa",
+                    color: "#71717a",
+                    fontSize: "7.5px",
+                    fontWeight: "bold",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer"
+                  }}
+                >
+                  i
+                </span>
+              </div>
+              <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
+                <div style={{ fontSize: "20px", fontWeight: "900", color: matchRate >= 85 ? "#10b981" : matchRate >= 75 ? "#f59e0b" : "#ef4444", fontFamily: "var(--font-pixel)", lineHeight: "1" }}>
+                  {matchRate}%
+                </div>
+                {/* 🟢 직관적인 핏 안전 등급 라벨 */}
+                <span style={{
+                  fontSize: "8.5px",
+                  fontWeight: "900",
+                  color: matchRate >= 85 ? "#10b981" : matchRate >= 75 ? "#f59e0b" : "#ef4444",
+                  letterSpacing: "-0.2px"
+                }}>
+                  {matchRate >= 85 ? "Good Fit 🟢" : matchRate >= 75 ? "Normal Fit 🟡" : "Caution 🔴"}
+                </span>
+              </div>
             </div>
 
             {/* 10개 점수 닷 인디케이터 (일치율 비례 점등) */}
-            <div style={{ display: "flex", gap: "3px", marginBottom: "8px" }}>
+            <div style={{ display: "flex", gap: "3px" }}>
               {Array.from({ length: 10 }).map((_, i) => {
                 const isActive = i < Math.round(matchRate / 10);
                 return (
@@ -2191,11 +2316,16 @@ export default function Dashboard_Main() {
                 );
               })}
             </div>
-
-            <div style={{ fontSize: "7.5px", color: "#a1a1aa", lineHeight: "1.4" }}>
-              정보를 추가할수록<br />정확도가 올라갑니다.
-            </div>
           </div>
+        </div>
+
+        {/* 5-2. [신규 탑재] 팀원의 정밀 실루엣 레이어드 비교 컴포넌트 전체 너비 적용 */}
+        <div style={{ marginBottom: "18px" }}>
+          <SilhouetteCompare
+            userMeasure={getUserMeasurements(selectedProduct.category)}
+            productMeasure={selectedProduct.measurements}
+            category={selectedProduct.category}
+          />
         </div>
 
         {/* 6. 기준 옷 변경 및 체형 정보 추가 입력 버튼 세트 (대칭형 화이트 버튼) */}
@@ -2227,7 +2357,7 @@ export default function Dashboard_Main() {
 
           {/* 체형 정보 추가 입력 */}
           <button
-            onClick={() => setView("chat")}
+            onClick={() => setActiveAlert("AI Fit Advisor")}
             style={{
               flex: 1,
               background: "#ffffff",
@@ -2270,82 +2400,164 @@ export default function Dashboard_Main() {
           gap: "12px",
           borderTop: "1px solid #f4f4f5"
         }}>
-          {/* 좌측 와이드 구매하기 버튼 (둥근 모서리, 올 블랙) */}
-          <button
-            onClick={() => {
-              const selectedSize = selectedProduct.size?.toUpperCase() || "L";
-              setCheckoutSize(selectedSize);
-              setCheckoutItems([{
-                ...selectedProduct,
-                cartId: Date.now(),
-                selectedSize
-              }]);
-              setPaymentSource("detail");
-              setView("payment");
-            }}
-            style={{
-              flex: 1,
-              height: "48px",
-              background: "#000000",
-              color: "#ffffff",
-              border: "none",
-              borderRadius: "10px", // 시안처럼 부드러운 둥근 각
-              padding: "0 20px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              cursor: "pointer",
-              transition: "all 0.15s ease",
-              outline: "none"
-            }}
-          >
-            {/* 가격 (백색 픽셀풍) */}
-            <span style={{ fontSize: "16px", fontWeight: "900", color: "#ffffff", fontFamily: "var(--font-pixel)" }}>
-              {selectedProduct.price}
-            </span>
+          {selectedProduct.isSold ? (
+            queuedItems.some(item => item.id === selectedProduct.id) ? (
+              /* [중복신청완료] 하얀배경에 2.5px 굵은검은실선 테두리 버튼 */
+              <button
+                onClick={() => {
+                  setSelectedQueueItemId(selectedProduct.id);
+                  setShowQueueModal(true);
+                }}
+                style={{
+                  flex: 1,
+                  height: "48px",
+                  background: "#ffffff",
+                  color: "#111111",
+                  border: "2.5px solid #000000",
+                  borderRadius: "10px",
+                  padding: "0 20px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  fontWeight: "900",
+                  fontSize: "12.5px",
+                  transition: "all 0.15s ease",
+                  outline: "none"
+                }}
+              >
+                ⏱️ 이미 줄서기 대기 신청한 상품입니다 (현황 보기)
+              </button>
+            ) : (
+              /* [최초 줄서기 신청] 검정색 와이드 버튼 */
+              <button
+                onClick={() => {
+                  const newQueueObj = {
+                    id: selectedProduct.id,
+                    brand: selectedProduct.brand,
+                    name: selectedProduct.name,
+                    price: selectedProduct.price,
+                    image: selectedProduct.image,
+                    category: selectedProduct.category || "pants",
+                    size: selectedProduct.size?.toUpperCase() || "M",
+                    measurements: {
+                      length: selectedProduct.measurements?.length ? selectedProduct.measurements.length + "cm" : "105cm",
+                      shoulder: selectedProduct.measurements?.shoulder ? selectedProduct.measurements.shoulder + "cm" : "40cm",
+                      chest: selectedProduct.measurements?.chest ? selectedProduct.measurements.chest + "cm" : "43cm",
+                      sleeve: selectedProduct.measurements?.sleeve ? selectedProduct.measurements.sleeve + "cm" : "36cm",
+                      hem: selectedProduct.measurements?.hem ? selectedProduct.measurements.hem + "cm" : "24cm"
+                    }
+                  };
+                  setQueuedItems(prev => [newQueueObj, ...prev]);
+                  setSelectedQueueItemId(selectedProduct.id);
 
-            {/* 구매하기 텍스트 */}
-            <span style={{ fontSize: "12px", fontWeight: "bold", color: "#ffffff", letterSpacing: "0.5px" }}>
-              구매하기
-            </span>
-          </button>
+                  // 하단 중복 토스트는 유저의 명시적인 지시(알림 삭제)에 따라 제거하고, 0.5초 뒤 대기 신청 완료 팝업으로 자연스럽게 유도
+                  setTimeout(() => {
+                    setShowQueueModal(true);
+                  }, 500);
+                }}
+                style={{
+                  flex: 1,
+                  height: "48px",
+                  background: "#000000",
+                  color: "#ffffff",
+                  border: "2px dashed #ffffff",
+                  borderRadius: "10px",
+                  padding: "0 20px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                  fontSize: "13px",
+                  transition: "all 0.15s ease",
+                  outline: "none"
+                }}
+              >
+                ⏱️ 이 상품 줄서기 대기 신청하기 (현재 대기 2명)
+              </button>
+            )
+          ) : (
+            /* 정상 구매하기 버튼 렌더링 */
+            <>
+              {/* 좌측 와이드 구매하기 버튼 (둥근 모서리, 올 블랙) */}
+              <button
+                onClick={() => {
+                  const selectedSize = selectedProduct.size?.toUpperCase() || "L";
+                  setCheckoutSize(selectedSize);
+                  setCheckoutItems([{
+                    ...selectedProduct,
+                    cartId: Date.now(),
+                    selectedSize
+                  }]);
+                  setPaymentSource("detail");
+                  setView("payment");
+                }}
+                style={{
+                  flex: 1,
+                  height: "48px",
+                  background: "#000000",
+                  color: "#ffffff",
+                  border: "none",
+                  borderRadius: "10px", // 시안처럼 부드러운 둥근 각
+                  padding: "0 20px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  cursor: "pointer",
+                  transition: "all 0.15s ease",
+                  outline: "none"
+                }}
+              >
+                {/* 가격 (백색 픽셀풍) */}
+                <span style={{ fontSize: "16px", fontWeight: "900", color: "#ffffff", fontFamily: "var(--font-pixel)" }}>
+                  {selectedProduct.price}
+                </span>
 
-          {/* 우측 정스퀘어 장바구니 버튼 (둥근 모서리, 올 블랙) */}
-          <button
-            onClick={() => {
-              const selectedSize = selectedProduct.size?.toUpperCase() || "L";
-              const newCartItem = {
-                ...selectedProduct,
-                cartId: Date.now(),
-                selectedSize
-              };
-              setCartItems(prev => [...prev, newCartItem]);
-              setSelectedCartIds(prev => [...prev, newCartItem.cartId]);
-              triggerToast(`🛒 장바구니에 담겼습니다.`);
-            }}
-            style={{
-              width: "48px",
-              height: "48px",
-              background: "#000000",
-              color: "#ffffff",
-              border: "none",
-              borderRadius: "10px", // 시안처럼 부드러운 둥근 각
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: "pointer",
-              transition: "all 0.15s ease",
-              padding: 0,
-              outline: "none"
-            }}
-          >
-            {/* 시안과 완전히 일치하는 클래식 카트 쇼핑백 핸들 SVG */}
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="9" cy="21" r="1.5" fill="#ffffff" />
-              <circle cx="19" cy="21" r="1.5" fill="#ffffff" />
-              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
-            </svg>
-          </button>
+                {/* 구매하기 텍스트 */}
+                <span style={{ fontSize: "12px", fontWeight: "bold", color: "#ffffff", letterSpacing: "0.5px" }}>
+                  구매하기
+                </span>
+              </button>
+
+              {/* 우측 정스퀘어 장바구니 버튼 (둥근 모서리, 올 블랙) */}
+              <button
+                onClick={() => {
+                  const selectedSize = selectedProduct.size?.toUpperCase() || "L";
+                  const newCartItem = {
+                    ...selectedProduct,
+                    cartId: Date.now(),
+                    selectedSize
+                  };
+                  setCartItems(prev => [...prev, newCartItem]);
+                  setSelectedCartIds(prev => [...prev, newCartItem.cartId]);
+                  triggerToast(`🛒 장바구니에 담겼습니다.`);
+                }}
+                style={{
+                  width: "48px",
+                  height: "48px",
+                  background: "#000000",
+                  color: "#ffffff",
+                  border: "none",
+                  borderRadius: "10px", // 시안처럼 부드러운 둥근 각
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  transition: "all 0.15s ease",
+                  padding: 0,
+                  outline: "none"
+                }}
+              >
+                {/* 시안과 완전히 일치하는 클래식 카트 쇼핑백 핸들 SVG */}
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="9" cy="21" r="1.5" fill="#ffffff" />
+                  <circle cx="19" cy="21" r="1.5" fill="#ffffff" />
+                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+                </svg>
+              </button>
+            </>
+          )}
         </div>
       </div>
     );
@@ -3171,7 +3383,7 @@ export default function Dashboard_Main() {
               원클릭 재판매
             </button>
             <button
-              onClick={() => setView("queue_product")}
+              onClick={() => setShowQueueModal(true)}
               style={{
                 borderRadius: "20px",
                 border: "1px solid #71717a",
@@ -3208,9 +3420,9 @@ export default function Dashboard_Main() {
                 // 줄서기 제품이나 채팅 상담 등 특정 메뉴 클릭 시 특화 액션
                 const handleRowClick = () => {
                   if (item.label === "채팅 상담하기") {
-                    setView("chat");
+                    setActiveAlert("AI Fit Advisor");
                   } else if (item.label === "줄서기 제품") {
-                    setView("queue_product");
+                    setShowQueueModal(true);
                   } else if (item.label === "재판매 관리") {
                     setView("resell_register");
                   } else {
@@ -3286,6 +3498,17 @@ export default function Dashboard_Main() {
   // VIEW 7: RESELL REGISTER VIEW (재판매 등록 화면)
   // ==========================================
   const renderResellRegisterView = () => {
+    // [피드백 반영] 크래시(검은 화면) 완벽 방지용 예외 처리
+    const currentItem = selectedResellItem || (purchasedItems && purchasedItems[0]);
+
+    if (!currentItem) {
+      return (
+        <div style={{ padding: "32px", textAlign: "center", color: "#6b7280" }}>
+          구매 이력이 존재하지 않습니다.
+        </div>
+      );
+    }
+
     return (
       <div className="animate-fade-in" style={{ background: "#ffffff", padding: "0 16px 24px 16px", textAlign: "left" }}>
         {/* 뒤로가기 & 타이틀 */}
@@ -3301,21 +3524,84 @@ export default function Dashboard_Main() {
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-          {/* 상품 정보 카드 */}
+
+          {/* [재판매 리스트 = 내가 산 실제 제품] 장바구니 다중 선택 UI */}
+          <div style={{ borderRadius: "12px", border: "2px solid #000000", padding: "16px", background: "#f9fafb" }}>
+            <span style={{ fontSize: "13px", fontWeight: "bold", color: "#111111", display: "block", marginBottom: "12px" }}>
+              재판매할 구매 상품 선택 (내가 산 제품)
+            </span>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              {purchasedItems.map((item) => {
+                const isSelected = currentItem.id === item.id;
+                return (
+                  <div
+                    key={item.id}
+                    onClick={() => setSelectedResellItem(item)}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                      padding: "10px",
+                      borderRadius: "8px",
+                      border: isSelected ? "2px solid #000000" : "1px solid #e4e4e7",
+                      background: isSelected ? "#ffffff" : "transparent",
+                      cursor: "pointer",
+                      transition: "all 0.1s ease"
+                    }}
+                  >
+                    {/* 선택 라디오 동그라미 */}
+                    <div style={{
+                      width: "16px",
+                      height: "16px",
+                      borderRadius: "50%",
+                      border: "2px solid #000000",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      background: isSelected ? "#000000" : "transparent"
+                    }}>
+                      {isSelected && <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#ffffff" }} />}
+                    </div>
+
+                    {/* 미니 상품 정보 */}
+                    <div style={{ width: "40px", height: "40px", border: "1px solid #e4e4e7", background: "#ffffff", padding: "2px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+                      {item.image ? (
+                        <img src={item.image} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                      ) : (
+                        <div style={{ fontSize: "7px" }}>{item.brand}</div>
+                      )}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: "9.5px", color: "#6b7280" }}>{item.brand} ({item.size} 사이즈)</div>
+                      <div style={{ fontSize: "11px", fontWeight: "bold", color: "#111111", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", maxWidth: "200px" }}>
+                        {item.name}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 현재 선택된 상품 상세 정보 카드 (동적 실시간 바인딩!) */}
           <div style={{ borderRadius: "12px", border: "1px solid #e4e4e7", padding: "16px", display: "flex", gap: "16px", alignItems: "center" }}>
-            <div style={{ width: "80px", height: "80px", border: "1px solid #18181b", padding: "4px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <img
-                src="https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&q=80&w=300"
-                alt="Product"
-                style={{ width: "100%", height: "100%", objectFit: "contain" }}
-              />
+            <div style={{ width: "80px", height: "80px", border: "1px solid #18181b", padding: "4px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+              {currentItem.image ? (
+                <img
+                  src={currentItem.image}
+                  alt={currentItem.name}
+                  style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                />
+              ) : (
+                <div style={{ fontSize: "10px", fontWeight: "bold" }}>{currentItem.brand}</div>
+              )}
             </div>
             <div>
-              <div style={{ fontSize: "11px", color: "#71717a" }}>Stussy</div>
+              <div style={{ fontSize: "11px", color: "#71717a" }}>{currentItem.brand} ({currentItem.size} 사이즈)</div>
               <div style={{ fontSize: "13px", fontWeight: "bold", color: "#18181b", margin: "2px 0 6px 0", lineHeight: "1.4" }}>
-                스투시 피그먼트 다이드 클래식 기어 티셔츠
+                {currentItem.name}
               </div>
-              <div style={{ fontSize: "15px", fontWeight: "900", color: "#18181b" }}>248,000</div>
+              <div style={{ fontSize: "15px", fontWeight: "900", color: "#18181b" }}>{currentItem.price}원</div>
             </div>
           </div>
 
@@ -3334,11 +3620,11 @@ export default function Dashboard_Main() {
             {/* 실측 치수 5열 가로 배치 */}
             <div style={{ display: "flex", justifyContent: "space-between", gap: "6px", marginBottom: "12px" }}>
               {[
-                { label: "총장", val: "72cm" },
-                { label: "어깨", val: "51cm" },
-                { label: "가슴", val: "56cm" },
-                { label: "소매", val: "22cm" },
-                { label: "밑단", val: "55cm" }
+                { label: "총장", val: currentItem.measurements?.length || "72cm" },
+                { label: "어깨", val: currentItem.measurements?.shoulder || "51cm" },
+                { label: "가슴", val: currentItem.measurements?.chest || "56cm" },
+                { label: "소매", val: currentItem.measurements?.sleeve || "22cm" },
+                { label: "밑단", val: currentItem.measurements?.hem || "55cm" }
               ].map((sz, idx) => (
                 <div key={idx} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
                   <span style={{ fontSize: "11px", color: "#71717a", fontWeight: "bold" }}>{sz.label}</span>
@@ -3370,7 +3656,7 @@ export default function Dashboard_Main() {
               <div>
                 <div style={{ fontSize: "10.5px", color: "#71717a", marginBottom: "4px" }}>추천 판매가</div>
                 <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  <span style={{ fontSize: "15px", fontWeight: "900", color: "#18181b" }}>248,000원</span>
+                  <span style={{ fontSize: "15px", fontWeight: "900", color: "#18181b" }}>{currentItem.price}원</span>
                   <span style={{ background: "#dcfce7", color: "#15803d", fontSize: "9px", fontWeight: "bold", padding: "1px 6px", borderRadius: "8px" }}>
                     최근 거래가 기준
                   </span>
@@ -3499,25 +3785,25 @@ export default function Dashboard_Main() {
           {/* 최종 등록 버튼 */}
           <button
             onClick={() => {
-              triggerToast("🎉 재판매 등록 완료! 대기자에게 알림이 즉각 발송됩니다.");
+              triggerToast(`🎉 [${currentItem.name}] 재판매 등록 완료! 대기자에게 알림이 즉각 발송됩니다.`);
               setTimeout(() => setView("my"), 2000);
             }}
             style={{
               width: "100%",
+              height: "48px",
               background: "#000000",
               color: "#ffffff",
               border: "none",
-              borderRadius: "24px",
-              padding: "14px 0",
-              fontSize: "14px",
-              fontWeight: "900",
+              borderRadius: "10px",
+              fontSize: "13px",
+              fontWeight: "bold",
               cursor: "pointer",
-              marginTop: "8px",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-              letterSpacing: "1px"
+              transition: "all 0.15s ease",
+              outline: "none",
+              marginBottom: "24px"
             }}
           >
-            재판매 등록하기
+            재판매 등록 완료하기
           </button>
         </div>
       </div>
@@ -3525,150 +3811,274 @@ export default function Dashboard_Main() {
   };
 
   // ==========================================
-  // VIEW 8: QUEUE PRODUCT VIEW (줄서기 제품 화면)
+  // VIEW 8: QUEUE PRODUCT VIEW (줄서기 제품 화면 - 팝업 모달 전용)
   // ==========================================
   const renderQueueProductView = () => {
-    // 85182초를 HH:MM:SS 형태로 포맷팅
-    const formatCountdown = (secs) => {
-      const h = Math.floor(secs / 3600).toString().padStart(2, "0");
-      const m = Math.floor((secs % 3600) / 60).toString().padStart(2, "0");
-      const s = (secs % 60).toString().padStart(2, "0");
-      return `${h}:${m}:${s}`;
+    if (!showQueueModal) return null;
+
+    // 현재 선택된 줄서기 아이템을 실시간 바인딩 (없다면 첫번째 값)
+    const currentQueueItem = queuedItems.find(q => q.id === selectedQueueItemId) || queuedItems[0];
+
+    // 대기 순번 및 대기 인원 동적 계산 (상품별 실감나는 가상 수치 세팅!)
+    const getWaitStats = (itemId) => {
+      if (itemId === "prod27") return { rank: "3번째 대기 중", count: "2명" };
+      if (itemId === "prod31") return { rank: "1번째 대기 중", count: "0명" };
+      return { rank: "2번째 대기 중", count: "1명" };
     };
 
+    const waitStats = currentQueueItem ? getWaitStats(currentQueueItem.id) : { rank: "1번째 대기 중", count: "0명" };
+
     return (
-      <div className="animate-fade-in" style={{ background: "#ffffff", padding: "0 16px 24px 16px", textAlign: "left" }}>
-        {/* 뒤로가기 & 타이틀 */}
-        <div
-          onClick={() => setView("my")}
-          style={{ display: "flex", alignItems: "center", gap: "12px", padding: "16px 0", cursor: "pointer", borderBottom: "1px solid #f4f4f5", marginBottom: "20px" }}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#18181b" strokeWidth="2.5">
-            <line x1="19" y1="12" x2="5" y2="12" />
-            <polyline points="12 19 5 12 12 5" />
-          </svg>
-          <span style={{ fontSize: "15px", fontWeight: "bold", color: "#18181b" }}>줄서기 제품</span>
-        </div>
-
-        {/* 탭 버튼 */}
-        <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
-          <button
-            onClick={() => {
-              if (selectedProduct) {
-                setView("detail");
-              } else {
-                triggerToast("ℹ️ 상품 상세 정보 화면으로 즉각 연동됩니다.");
-              }
-            }}
-            style={{
-              padding: "6px 14px",
-              borderRadius: "20px",
-              border: "1px solid #e4e4e7",
-              background: "#ffffff",
-              color: "#71717a",
-              fontSize: "11px",
-              fontWeight: "bold",
-              cursor: "pointer"
-            }}
-          >
-            상품 상세
-          </button>
-          <button
-            style={{
-              padding: "6px 14px",
-              borderRadius: "20px",
-              border: "1px solid #71717a",
-              background: "#e4e4e7",
-              color: "#18181b",
-              fontSize: "11px",
-              fontWeight: "bold",
-              cursor: "default"
-            }}
-          >
-            줄서기 알림
-          </button>
-        </div>
-
-        {/* 메인 콘텐츠 영역 */}
-        <div>
-          <div style={{ fontSize: "13px", fontWeight: "bold", color: "#18181b", marginBottom: "12px" }}>
-            구매 확정 요청
+      <div style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100vw",
+        height: "100vh",
+        background: "rgba(0,0,0,0.5)",
+        backdropFilter: "blur(4px)",
+        zIndex: 100000,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        animation: "fadeIn 0.15s ease"
+      }}>
+        <div className="animate-fade-in" style={{
+          width: "90%",
+          maxWidth: "370px",
+          background: "#ffffff",
+          borderRadius: "20px",
+          padding: "24px 20px",
+          boxShadow: "0 10px 40px rgba(0,0,0,0.2)",
+          textAlign: "left",
+          boxSizing: "border-box",
+          maxHeight: "85vh",
+          overflowY: "auto",
+          display: "flex",
+          flexDirection: "column"
+        }}>
+          {/* 닫기 헤더 & 타이틀 */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "14px", borderBottom: "1px solid #f4f4f5", marginBottom: "16px" }}>
+            <div>
+              <span style={{ fontSize: "16px", fontWeight: "900", color: "#111111", letterSpacing: "-0.5px" }}>줄서기 대기 현황</span>
+              <span style={{ fontSize: "11px", color: "#15803d", fontWeight: "bold", marginLeft: "8px" }}>
+                현재 {queuedItems.length}개 상품 대기
+              </span>
+            </div>
+            <svg
+              onClick={() => setShowQueueModal(false)}
+              style={{ cursor: "pointer" }}
+              width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#71717a" strokeWidth="2"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
           </div>
 
-          {/* 다크 테마 카드 */}
-          <div style={{ background: "#09090b", borderRadius: "16px", padding: "20px", color: "#ffffff" }}>
-            {/* 상단 불릿 헤더 */}
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#22c55e" }}></div>
-              <span style={{ fontSize: "12px", fontWeight: "bold" }}>줄서기 1번 - 구매 확정 요청</span>
-            </div>
-
-            <div style={{ borderBottom: "1px solid rgba(255,255,255,0.15)", margin: "12px 0" }}></div>
-
-            {/* 상품 정보 카드 */}
-            <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
-              <div style={{ width: "70px", height: "70px", background: "#ffffff", border: "1px solid rgba(255,255,255,0.2)", padding: "4px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <img
-                  src="https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&q=80&w=300"
-                  alt="Product"
-                  style={{ width: "100%", height: "100%", objectFit: "contain" }}
-                />
+          {/* 메인 리스트 영역 */}
+          {queuedItems.length === 0 ? (
+            <div style={{ padding: "40px 0", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
+              <div style={{ width: "48px", height: "48px", borderRadius: "50%", background: "#f4f4f5", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a1a1aa" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
               </div>
-              <div>
-                <div style={{ fontSize: "11px", color: "#a1a1aa" }}>Stussy</div>
-                <div style={{ fontSize: "12px", fontWeight: "bold", color: "#ffffff", margin: "2px 0" }}>
-                  스투시 피그먼트 다이드 클래식 기어 티셔츠
+              <span style={{ fontSize: "12px", color: "#71717a", fontWeight: "bold" }}>현재 줄서기 대기 중인 제품이 없습니다.</span>
+              <button
+                onClick={() => setShowQueueModal(false)}
+                style={{
+                  marginTop: "8px",
+                  padding: "8px 20px",
+                  background: "#000000",
+                  color: "#ffffff",
+                  border: "none",
+                  borderRadius: "8px",
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  cursor: "pointer"
+                }}
+              >
+                상품 구경하러 가기
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+
+              {/* [다중 선택 장바구니 리스트] 원클릭 재판매 등록 화면과 완벽 일치하는 세련된 UI */}
+              <div style={{ borderRadius: "12px", border: "1.5px solid #000000", padding: "14px", background: "#f9fafb" }}>
+                <span style={{ fontSize: "12px", fontWeight: "bold", color: "#111111", display: "block", marginBottom: "10px" }}>
+                  줄서기 대기 중인 상품 선택
+                </span>
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px", maxHeight: "160px", overflowY: "auto" }}>
+                  {queuedItems.map((item) => {
+                    const isSelected = currentQueueItem && currentQueueItem.id === item.id;
+                    return (
+                      <div
+                        key={item.id}
+                        onClick={() => setSelectedQueueItemId(item.id)}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "10px",
+                          padding: "8px",
+                          borderRadius: "8px",
+                          border: isSelected ? "2px solid #000000" : "1px solid #e4e4e7",
+                          background: isSelected ? "#ffffff" : "transparent",
+                          cursor: "pointer",
+                          transition: "all 0.1s ease"
+                        }}
+                      >
+                        {/* 선택 라디오 동그라미 */}
+                        <div style={{
+                          width: "14px",
+                          height: "14px",
+                          borderRadius: "50%",
+                          border: "2px solid #000000",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          background: isSelected ? "#000000" : "transparent",
+                          flexShrink: 0
+                        }}>
+                          {isSelected && <div style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#ffffff" }} />}
+                        </div>
+
+                        {/* 미니 상품 정보 */}
+                        <div style={{ width: "36px", height: "36px", border: "1px solid #e4e4e7", background: "#ffffff", padding: "2px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
+                          {item.image ? (
+                            <img src={item.image} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                          ) : (
+                            <div style={{ fontSize: "6px" }}>{item.brand}</div>
+                          )}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: "10px", fontWeight: "bold", color: "#111111", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
+                            {item.name}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-                <div style={{ fontSize: "14px", fontWeight: "900", color: "#ffffff" }}>248,000</div>
               </div>
-            </div>
 
-            <div style={{ fontSize: "10px", color: "#a1a1aa", marginTop: "12px", lineHeight: "1.4" }}>
-              줄 서기 하셨던 상품이 재판매 등록 됐어요.<br />
-              24시간 내 구매 확정하시면 바로 거래가 체결돼요.
-            </div>
+              {currentQueueItem && (
+                <>
+                  {/* 신청한 상품의 미니 정보 카드 */}
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    padding: "12px",
+                    borderRadius: "12px",
+                    background: "#ffffff",
+                    border: "1px solid #e5e7eb",
+                    textAlign: "left"
+                  }}>
+                    <div style={{
+                      width: "48px",
+                      height: "48px",
+                      background: "#ffffff",
+                      borderRadius: "8px",
+                      border: "1px solid #e5e7eb",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      overflow: "hidden",
+                      flexShrink: 0
+                    }}>
+                      {currentQueueItem.image ? (
+                        <img src={currentQueueItem.image} alt={currentQueueItem.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                      ) : (
+                        <div style={{ fontSize: "8px", fontWeight: "bold" }}>{currentQueueItem.brand}</div>
+                      )}
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: "10px", color: "#9ca3af", fontWeight: "bold" }}>{currentQueueItem.brand}</div>
+                      <div style={{ fontSize: "12px", fontWeight: "bold", color: "#1f2937", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", margin: "1px 0" }}>
+                        {currentQueueItem.name}
+                      </div>
+                      <div style={{ fontSize: "11px", color: "#6b7280" }}>{currentQueueItem.price}원</div>
+                    </div>
+                  </div>
 
-            {/* 타이머 블록 */}
-            <div style={{ background: "#ffffff", borderRadius: "12px", padding: "14px 0", textAlign: "center", margin: "18px 0" }}>
-              <div style={{ fontSize: "28px", fontWeight: "900", color: "#dc2626", letterSpacing: "1px", fontFamily: "monospace" }}>
-                {formatCountdown(countdownSeconds)}
-              </div>
-              <div style={{ fontSize: "9px", color: "#71717a", marginTop: "4px" }}>남은 시간</div>
-            </div>
+                  {/* 실시간 줄서기 대기 현황 상세 카드 */}
+                  <div style={{
+                    background: "#f8fafc",
+                    borderRadius: "12px",
+                    border: "1px solid #e2e8f0",
+                    padding: "14px 16px",
+                    textAlign: "left",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "8px"
+                  }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "12px", color: "#64748b" }}>내 대기 순번</span>
+                      <span style={{ fontSize: "13px", fontWeight: "bold", color: "#0f172a" }}>{waitStats.rank}</span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "12px", color: "#64748b" }}>앞에 대기중인 인원</span>
+                      <span style={{ fontSize: "13px", fontWeight: "bold", color: "#059669" }}>{waitStats.count}</span>
+                    </div>
 
-            {/* 가격 정보 */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-              <span style={{ fontSize: "11px", color: "#a1a1aa" }}>재판매 가격</span>
-              <span style={{ fontSize: "14px", fontWeight: "900", color: "#ffffff" }}>248,000원</span>
-            </div>
+                  </div>
 
-            {/* 액션 버튼 */}
-            <div style={{ display: "flex", gap: "10px" }}>
-              <button
-                onClick={() => {
-                  triggerToast("❌ 줄서기가 거절되었습니다. 다음 대기열로 기회가 양도됩니다.");
-                  setTimeout(() => setView("my"), 2000);
-                }}
-                style={{ flex: 1, border: "1px solid #ffffff", background: "transparent", color: "#ffffff", padding: "10px 0", borderRadius: "20px", fontSize: "12px", fontWeight: "bold", cursor: "pointer", outline: "none" }}
-              >
-                거절하기
-              </button>
-              <button
-                onClick={() => {
-                  triggerToast("🎉 구매 확정 완료! 판매자 대금 정산 및 배송이 즉시 개시됩니다.");
-                  setTimeout(() => setView("my"), 2000);
-                }}
-                style={{ flex: 1, border: "none", background: "#15803d", color: "#ffffff", padding: "10px 0", borderRadius: "20px", fontSize: "12px", fontWeight: "bold", cursor: "pointer", outline: "none" }}
-              >
-                구매 확정
-              </button>
+                  {/* 액션 투 버튼 */}
+                  <div style={{ display: "flex", gap: "10px", marginTop: "4px" }}>
+                    <button
+                      onClick={() => {
+                        // [피드백 반영] 모바일 친화형 콤팩트 커스텀 취소 경고 모달을 트리거!
+                        setCancelTargetItem(currentQueueItem);
+                        setShowCancelConfirmModal(true);
+                      }}
+                      style={{
+                        flex: 1,
+                        height: "44px",
+                        border: "1px solid #e2e8f0",
+                        background: "#ffffff",
+                        color: "#ef4444",
+                        borderRadius: "10px",
+                        fontSize: "12.5px",
+                        fontWeight: "bold",
+                        cursor: "pointer",
+                        outline: "none",
+                        transition: "all 0.15s ease"
+                      }}
+                    >
+                      줄서기 취소하기
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowQueueModal(false);
+                      }}
+                      style={{
+                        flex: 1,
+                        height: "44px",
+                        border: "none",
+                        background: "#000000",
+                        color: "#ffffff",
+                        borderRadius: "10px",
+                        fontSize: "12.5px",
+                        fontWeight: "bold",
+                        cursor: "pointer",
+                        outline: "none",
+                        transition: "all 0.15s ease"
+                      }}
+                    >
+                      확인
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
-          </div>
+          )}
 
-          {/* 안내 피치 */}
-          <div style={{ textAlign: "center", marginTop: "24px", display: "flex", flexDirection: "column", gap: "6px" }}>
-            <div style={{ fontSize: "10px", color: "#a1a1aa" }}>시간 내 응답이 없을 시 다음 순번으로 자동 이동돼요.</div>
-            <div style={{ fontSize: "10px", color: "#a1a1aa" }}>줄서기는 언제든지 취소할 수 있어요.</div>
+          {/* 안내 배너 피치 */}
+          <div style={{ textAlign: "center", marginTop: "16px", display: "flex", flexDirection: "column", gap: "4px", borderTop: "1px solid #f4f4f5", paddingTop: "12px" }}>
+            <div style={{ fontSize: "9.5px", color: "#a1a1aa" }}>실측 분석에 기반한 가상 결제 거래를 체결합니다.</div>
           </div>
         </div>
       </div>
@@ -3727,6 +4137,280 @@ export default function Dashboard_Main() {
           >
             확인
           </button>
+        </div>
+      </div>
+    );
+  };
+
+  // ==========================================
+  // [추가 VIEW] FIT GUIDE MODAL (싱크로율 판정 기준 세부 도움말 모달)
+  // ==========================================
+  const renderFitGuideModal = () => {
+    if (!showFitGuideModal) return null;
+
+    return (
+      <div 
+        onClick={() => setShowFitGuideModal(false)}
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: "rgba(0, 0, 0, 0.6)",
+          backdropFilter: "blur(4px)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 300000, // 최상단 오버레이
+          padding: "20px",
+          boxSizing: "border-box"
+        }}
+      >
+        <div 
+          onClick={(e) => e.stopPropagation()} // 내부 클릭 시 닫힘 방지
+          style={{
+            width: "100%",
+            maxWidth: "340px",
+            background: "#ffffff",
+            borderRadius: "20px",
+            border: "1.5px solid #111111", // GUBI의 시그니처 시안 1.5px 블랙 단선
+            padding: "24px 20px 20px 20px",
+            boxShadow: "0 20px 30px rgba(0, 0, 0, 0.2)",
+            boxSizing: "border-box",
+            position: "relative",
+            textAlign: "left"
+          }}
+        >
+          {/* 타이틀 */}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
+            <span style={{ fontSize: "18px" }}>📐</span>
+            <h4 style={{ fontSize: "14px", fontWeight: "900", color: "#111111", margin: 0, letterSpacing: "-0.3px" }}>
+              GUBI 핏 싱크로율 판정 기준
+            </h4>
+          </div>
+
+          <p style={{ fontSize: "11px", color: "#6b7280", lineHeight: "1.6", margin: "0 0 20px 0" }}>
+            GUBI 2D AI는 내 인생 옷과 구매 상품의 최대 실측 오차를 수학적으로 계산하여 싱크로율을 판정합니다.
+          </p>
+
+          {/* 기준 표 (화이트 카드 리스트 구조) */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "24px" }}>
+            {/* 1. Good Fit */}
+            <div style={{ border: "1px solid #e4e4e7", padding: "12px", background: "#f8fafc" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                <span style={{ fontSize: "11px", fontWeight: "900", color: "#10b981" }}>Good Fit 🟢</span>
+                <span style={{ fontSize: "11px", fontWeight: "bold", color: "#10b981", fontFamily: "var(--font-pixel)" }}>
+                  85% ~ 100%
+                </span>
+              </div>
+              <p style={{ fontSize: "9.5px", color: "#4b5563", lineHeight: "1.4", margin: 0 }}>
+                최대 실측 편차가 **2.7cm 이하**인 안전 지대! 인생 옷과 거의 흡사한 실패 없는 피팅감을 약속합니다.
+              </p>
+            </div>
+
+            {/* 2. Normal Fit */}
+            <div style={{ border: "1px solid #e4e4e7", padding: "12px", background: "#fffdfa" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                <span style={{ fontSize: "11px", fontWeight: "900", color: "#f59e0b" }}>Normal Fit 🟡</span>
+                <span style={{ fontSize: "11px", fontWeight: "bold", color: "#f59e0b", fontFamily: "var(--font-pixel)" }}>
+                  75% ~ 84%
+                </span>
+              </div>
+              <p style={{ fontSize: "9.5px", color: "#4b5563", lineHeight: "1.4", margin: 0 }}>
+                최대 실측 편차가 **4.5cm 이하**인 적합 지대! 무난하게 잘 입을 수 있는 대중적인 핏 편차 영역입니다.
+              </p>
+            </div>
+
+            {/* 3. Caution */}
+            <div style={{ border: "1px solid #e4e4e7", padding: "12px", background: "#fef2f2" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                <span style={{ fontSize: "11px", fontWeight: "900", color: "#ef4444" }}>Caution 🔴</span>
+                <span style={{ fontSize: "11px", fontWeight: "bold", color: "#ef4444", fontFamily: "var(--font-pixel)" }}>
+                  75% 미만
+                </span>
+              </div>
+              <p style={{ fontSize: "9.5px", color: "#4b5563", lineHeight: "1.4", margin: 0 }}>
+                어느 한 부위의 실측 편차가 **4.5cm를 초과**한 주의 지대! 착용 시 체감이 크므로 상세 치수 대조표를 확인해 주세요.
+              </p>
+            </div>
+          </div>
+
+          {/* 닫기 버튼 */}
+          <button
+            onClick={() => setShowFitGuideModal(false)}
+            style={{
+              width: "100%",
+              height: "44px",
+              background: "#111111",
+              color: "#ffffff",
+              border: "none",
+              fontSize: "12px",
+              fontWeight: "bold",
+              cursor: "pointer",
+              transition: "opacity 0.2s"
+            }}
+          >
+            확인
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // ==========================================
+  // VIEW 11: CANCEL CONFIRM MODAL (줄서기 취소 커스텀 경고 모달)
+  // ==========================================
+  const renderCancelConfirmModal = () => {
+    if (!showCancelConfirmModal || !cancelTargetItem) return null;
+
+    return (
+      <div style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: "rgba(0, 0, 0, 0.6)",
+        backdropFilter: "blur(4px)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 200000, // 줄서기 현황판 팝업(zIndex 100000)보다 위에 덮여야 하므로 더 높게 설정
+        padding: "20px",
+        boxSizing: "border-box"
+      }}>
+        <div style={{
+          width: "100%",
+          maxWidth: "320px", // 모바일용 콤팩트 카드 규격
+          background: "#ffffff",
+          borderRadius: "20px",
+          padding: "24px 20px 20px 20px",
+          boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+          textAlign: "center",
+          boxSizing: "border-box",
+          border: "1px solid #f4f4f5",
+          transform: "scale(1)",
+          transition: "transform 0.2s ease"
+        }}>
+          {/* 빨간색 경고 삼각형 아이콘 */}
+          <div style={{
+            width: "56px",
+            height: "56px",
+            borderRadius: "50%",
+            background: "#fef2f2",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            margin: "0 auto 16px auto"
+          }}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+          </div>
+
+          {/* 타이틀 */}
+          <h4 style={{
+            fontSize: "16px",
+            fontWeight: "bold",
+            color: "#111111",
+            margin: "0 0 8px 0"
+          }}>
+            ⏱️ 줄서기 취소 경고
+          </h4>
+
+          {/* 대상 상품 이름 표시 */}
+          <div style={{
+            fontSize: "11px",
+            color: "#9ca3af",
+            fontWeight: "bold",
+            marginBottom: "12px",
+            textOverflow: "ellipsis",
+            overflow: "hidden",
+            whiteSpace: "nowrap"
+          }}>
+            {cancelTargetItem.brand} - {cancelTargetItem.name}
+          </div>
+
+          {/* 경고 안내 본문 */}
+          <p style={{
+            fontSize: "12.5px",
+            color: "#4b5563",
+            lineHeight: "1.6",
+            margin: "0 0 24px 0",
+            wordBreak: "keep-all"
+          }}>
+            줄서기를 취소하시면 확보하셨던 <strong>대기 순번이 초기화</strong>되며 다시 되돌릴 수 없습니다. 정말 취소하시겠습니까?
+          </p>
+
+          {/* 하단 모바일식 투-버튼 세트 */}
+          <div style={{
+            display: "flex",
+            gap: "10px"
+          }}>
+            {/* 돌아가기 */}
+            <button
+              onClick={() => {
+                setShowCancelConfirmModal(false);
+                setCancelTargetItem(null);
+              }}
+              style={{
+                flex: 1,
+                height: "44px",
+                borderRadius: "12px",
+                border: "1px solid #e5e7eb",
+                background: "#ffffff",
+                color: "#6b7280",
+                fontSize: "12.5px",
+                fontWeight: "bold",
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+                outline: "none"
+              }}
+            >
+              돌아가기
+            </button>
+
+            {/* 네, 취소합니다 */}
+            <button
+              onClick={() => {
+                // 취소 로직 실행
+                const updatedList = queuedItems.filter(q => q.id !== cancelTargetItem.id);
+                setQueuedItems(updatedList);
+
+                // 다음 선택할 아이템을 영리하게 업데이트
+                if (updatedList.length > 0) {
+                  setSelectedQueueItemId(updatedList[0].id);
+                } else {
+                  setSelectedQueueItemId(null);
+                }
+
+                // 모달 닫기
+                setShowCancelConfirmModal(false);
+                setCancelTargetItem(null);
+                setShowQueueModal(false); // 줄서기 목록 모달도 시원하게 닫아줌
+
+                triggerToast(`❌ [${cancelTargetItem.name}] 줄서기가 취소되었습니다.`);
+              }}
+              style={{
+                flex: 1,
+                height: "44px",
+                borderRadius: "12px",
+                border: "none",
+                background: "#ef4444",
+                color: "#ffffff",
+                fontSize: "12.5px",
+                fontWeight: "bold",
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+                outline: "none"
+              }}
+            >
+              네, 취소합니다
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -4041,11 +4725,15 @@ export default function Dashboard_Main() {
         userSelect: "none"
       }}>
         {tabs.map((tab) => {
-          const isSelected = view === tab.id || (tab.id === "main" && view === "category") || (tab.id === "my" && view === "queue_product");
+          const isSelected = view === tab.id || (tab.id === "main" && view === "category");
           return (
             <div
               key={tab.id}
               onClick={() => {
+                if (tab.id === "chat") {
+                  setActiveAlert("AI Fit Advisor");
+                  return;
+                }
                 setView(tab.id);
                 setSelectedProduct(null);
               }}
@@ -4095,7 +4783,7 @@ export default function Dashboard_Main() {
       case "resell_register":
         return renderResellRegisterView();
       case "queue_product":
-        return renderQueueProductView();
+        return null;
       case "cart":
         return renderCartView();
       default:
@@ -4157,6 +4845,15 @@ export default function Dashboard_Main() {
 
       {/* [추가] 프로필 정보 동적 편집 모달 */}
       {renderProfileEditModal()}
+
+      {/* [추가] 줄서기 대기자 목록 팝업 모달 */}
+      {renderQueueProductView()}
+
+      {/* [추가] 모바일용 커스텀 줄서기 취소 확인 팝업 모달 */}
+      {renderCancelConfirmModal()}
+
+      {/* [추가] 핏 싱크로율 판정 기준 가이드 팝업 모달 */}
+      {renderFitGuideModal()}
     </div>
   );
 }
