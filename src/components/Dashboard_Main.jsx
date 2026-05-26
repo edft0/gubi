@@ -732,6 +732,110 @@ export default function Dashboard_Main() {
     return { shoulder: 0, chest: 0, length: 0, sleeve: 0, category: "none" };
   };
 
+  const getDynamicFitComments = (product) => {
+    if (!product || !product.measurements) {
+      return { warnComment: null, goodComment: "측정 데이터 없음" };
+    }
+
+    const category = product.category;
+    const userMeasure = getUserMeasurements(category);
+    const prodMeasure = product.measurements;
+
+    if (category === "pants") {
+      // 👖 하의 매핑 (pants-shoulder => 허리 waist, pants-chest => 허벅지 thigh, length => 총장)
+      const diffWaist = (prodMeasure.shoulder || prodMeasure.waist || 0) - (userMeasure.shoulder || 0);
+      const diffThigh = (prodMeasure.chest || prodMeasure.thigh || 0) - (userMeasure.chest || 0);
+      const diffLength = (prodMeasure.length || 0) - (userMeasure.length || 0);
+
+      const rawW = Number(diffWaist.toFixed(0)); // 소수점 반올림하여 콤팩트 단어화!
+      const rawT = Number(diffThigh.toFixed(0));
+      const rawL = Number(diffLength.toFixed(0));
+
+      let warnComment = null;
+      let goodComment = null; // 💡 디폴트 초기값을 null로 선언하여 허수 노출 버그 방지!
+
+      // 🔴 [피드백 완벽 반영] 부정적인 부분만 집어내어 warnComment에 바인딩
+      if (rawW < -1.5) {
+        warnComment = `허리 ${Math.abs(rawW)}cm 작음`;
+      } else if (rawW > 1.5) {
+        warnComment = `허리 ${rawW}cm 큼`;
+      } else if (rawT < -2.0) {
+        warnComment = `허벅지 ${Math.abs(rawT)}cm 타이트`;
+      } else if (rawT > 2.0) {
+        warnComment = `허벅지 ${rawT}cm 여유`;
+      } else if (rawL < -3.0) {
+        warnComment = `기장 ${Math.abs(rawL)}cm 짧음`;
+      } else if (rawL > 3.0) {
+        warnComment = `기장 ${rawL}cm 긺`;
+      }
+
+      // 🟢 [버그 원천 해결] 긍정적인 부분만 골라내되, 부정적 경고 부위와 상호 배제(Mutual Exclusion) 시킴!
+      if (Math.abs(rawW) <= 1.5 && !warnComment?.includes("허리")) {
+        goodComment = "허리 딱 맞음";
+      } else if (Math.abs(rawT) <= 2.0 && !warnComment?.includes("허벅지")) {
+        goodComment = "허벅지 잘 맞음";
+      } else if (Math.abs(rawL) <= 3.0 && !warnComment?.includes("기장")) {
+        goodComment = "기장 잘 맞음";
+      }
+
+      if (!warnComment && !goodComment) {
+        if (Math.abs(rawW) <= 1.5 && Math.abs(rawT) <= 2.0) {
+          goodComment = "허리·허벅지 딱 맞음";
+        } else {
+          goodComment = "하의 핏 안정적";
+        }
+      }
+
+      return { warnComment, goodComment };
+    } else {
+      // 👕 상의 매핑 (shoulder => 어깨, chest => 가슴, length => 총장)
+      const diffShoulder = (prodMeasure.shoulder || 0) - (userMeasure.shoulder || 0);
+      const diffChest = (prodMeasure.chest || 0) - (userMeasure.chest || 0);
+      const diffLength = (prodMeasure.length || 0) - (userMeasure.length || 0);
+
+      const rawS = Number(diffShoulder.toFixed(0)); // 군더더기 소거 정수 반올림!
+      const rawC = Number(diffChest.toFixed(0));
+      const rawL = Number(diffLength.toFixed(0));
+
+      let warnComment = null;
+      let goodComment = null; // 💡 디폴트 초기값을 null로 선언하여 허수 노출 버그 방지!
+
+      // 🔴 [피드백 완벽 반영] 부정적인 것만 warnComment에 바인딩
+      if (rawS < -1.5) {
+        warnComment = `어깨 ${Math.abs(rawS)}cm 작음`;
+      } else if (rawS > 1.5) {
+        warnComment = `어깨 ${rawS}cm 큼`;
+      } else if (rawC < -2.0) {
+        warnComment = `가슴 ${Math.abs(rawC)}cm 좁음`;
+      } else if (rawC > 2.0) {
+        warnComment = `가슴 ${rawC}cm 여유`;
+      } else if (rawL < -2.5) {
+        warnComment = `총장 ${Math.abs(rawL)}cm 짧음`;
+      } else if (rawL > 2.5) {
+        warnComment = `총장 ${rawL}cm 긺`;
+      }
+
+      // 🟢 [버그 원천 해결] 긍정적인 것만 골라내되, 부정적 경고 부위와 상호 배제(Mutual Exclusion) 시킴!
+      if (Math.abs(rawS) <= 1.5 && !warnComment?.includes("어깨")) {
+        goodComment = "어깨 딱 맞음";
+      } else if (Math.abs(rawC) <= 2.0 && !warnComment?.includes("가슴")) {
+        goodComment = "가슴 잘 맞음";
+      } else if (Math.abs(rawL) <= 2.5 && !warnComment?.includes("총장")) {
+        goodComment = "총장 잘 맞음";
+      }
+
+      if (!warnComment && !goodComment) {
+        if (Math.abs(rawS) <= 1.5 && Math.abs(rawC) <= 2.0) {
+          goodComment = "어깨·가슴 딱 맞음";
+        } else {
+          goodComment = "상체 핏 최적화";
+        }
+      }
+
+      return { warnComment, goodComment };
+    }
+  };
+
   const getProductMaxDiff = (product) => {
     const userMeasures = getUserMeasurements(product.category);
     const prodMeasures = product.measurements;
@@ -1069,30 +1173,28 @@ export default function Dashboard_Main() {
           {hoveredBadgeProductId === product.id && badge && (
             <div style={{
               position: "absolute",
-              top: "24px",
+              top: "10px", // 윗 여백 공간 최적 활용!
               left: "6px",
               background: "rgba(10, 10, 12, 0.96)",
               color: "#ffffff",
               border: "1.5px solid #ffffff",
-              padding: "8px 8px",
-              zIndex: 1000, // 카드를 덮는 최상위 팝업
+              padding: "6px 6px",
+              zIndex: 1000,
               width: "140px",
               pointerEvents: "none",
-              boxShadow: "0 10px 25px rgba(0,0,0,0.65)",
+              boxShadow: "0 8px 20px rgba(0,0,0,0.65)",
               display: "flex",
               flexDirection: "column",
-              gap: "6px",
+              gap: "4px",
               borderRadius: "4px"
             }}>
-              <div style={{ fontSize: "7px", fontFamily: "var(--font-pixel)", color: "#10b981", letterSpacing: "0.2px", fontWeight: "900" }}>
-                FIT SILHOUETTE
-              </div>
+              {/* 💡 [피드백 완벽 반영] FIT SILHOUETTE 타이틀 전면 삭제하여 여백 공간 확보 및 메인 SVG 시인성 극대화! */}
 
-              {/* 💡 2D 실루엣 정밀 축소 드로잉 (isMini=true 프롭 장착!) */}
-              <div style={{ 
-                width: "100%", 
-                height: "100px", 
-                overflow: "hidden", 
+              {/* 💡 확보된 공간만큼 SVG 높이를 96px로 늘리고 드로잉 스케일을 1.05배로 시원하게 확대! */}
+              <div style={{
+                width: "100%",
+                height: "96px",
+                overflow: "hidden",
                 background: "#000000",
                 border: "1px solid rgba(255,255,255,0.15)",
                 display: "flex",
@@ -1100,15 +1202,15 @@ export default function Dashboard_Main() {
                 justifyContent: "center",
                 borderRadius: "3px"
               }}>
-                <div style={{ 
-                  transform: "scale(0.85)", 
-                  width: "100%", 
+                <div style={{
+                  transform: "scale(1.05) translateY(-8px)", // 웅장하게 키우고 위로 가볍게 밀어 올려 정렬!
+                  width: "100%",
                   height: "100%",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center"
                 }}>
-                  <SilhouetteCompare 
+                  <SilhouetteCompare
                     category={product.category}
                     userMeasure={getUserMeasurements(product.category)}
                     productMeasure={product.measurements}
@@ -1117,19 +1219,32 @@ export default function Dashboard_Main() {
                 </div>
               </div>
 
-              {/* 🚦 초록 잘 맞음, 노랑 약간 차이, 빨강 주의 3색 신호등 범례 */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "7.5px", fontWeight: "bold", borderTop: "1px solid rgba(255,255,255,0.15)", paddingTop: "5px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "4.5px", color: "#22c55e" }}>
-                  <span style={{ width: "4.5px", height: "4.5px", borderRadius: "50%", background: "#22c55e" }} />
-                  초록 잘 맞음
+              {/* 🚦 [피드백 완벽 반영] "초록/노랑/빨강" 단어를 소거하고 "잘 맞음 / 약간 차이 / 주의" 로 간소화한 컴팩트 가로 한 줄 범례 */}
+              <div style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "4.5px",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "7.2px",
+                fontWeight: "900",
+                borderTop: "1px solid rgba(255,255,255,0.15)",
+                paddingTop: "4px",
+                lineHeight: "1.3"
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "2px", color: "#22c55e" }}>
+                  <span style={{ width: "3.5px", height: "3.5px", borderRadius: "50%", background: "#22c55e", display: "inline-block" }} />
+                  <span>잘 맞음</span>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "4.5px", color: "#f59e0b" }}>
-                  <span style={{ width: "4.5px", height: "4.5px", borderRadius: "50%", background: "#f59e0b" }} />
-                  노랑 약간 차이
+                <span style={{ color: "rgba(255,255,255,0.25)" }}>/</span>
+                <div style={{ display: "flex", alignItems: "center", gap: "2px", color: "#f59e0b" }}>
+                  <span style={{ width: "3.5px", height: "3.5px", borderRadius: "50%", background: "#f59e0b", display: "inline-block" }} />
+                  <span>약간 차이</span>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "4.5px", color: "#ef4444" }}>
-                  <span style={{ width: "4.5px", height: "4.5px", borderRadius: "50%", background: "#ef4444" }} />
-                  빨강 주의
+                <span style={{ color: "rgba(255,255,255,0.25)" }}>/</span>
+                <div style={{ display: "flex", alignItems: "center", gap: "2px", color: "#ef4444" }}>
+                  <span style={{ width: "3.5px", height: "3.5px", borderRadius: "50%", background: "#ef4444", display: "inline-block" }} />
+                  <span>주의</span>
                 </div>
               </div>
             </div>
@@ -2252,19 +2367,12 @@ export default function Dashboard_Main() {
 
           {/* 우열: AI 추천 핏 설명 + 일치도 10개 서클 점수판 */}
           <div style={{ display: "flex", flexDirection: "column", textAlign: "left", padding: "10px 12px", background: "#f4f4f5", borderRadius: "10px", justifyContent: "center" }}>
-            <div style={{ fontSize: "9px", fontWeight: "900", color: "#ef4444", marginBottom: "3px", letterSpacing: "-0.3px" }}>
-              {isP ? "⚠️ 허리가 약간 타이트합니다." : "⚠️ 어깨가 약간 작습니다."}
-            </div>
-            <div style={{ fontSize: "9px", fontWeight: "900", color: "#10b981", marginBottom: "10px", letterSpacing: "-0.3px" }}>
-              {isP ? "✨ 허벅지는 잘 맞습니다." : "✨ 총장은 여유 있습니다."}
-            </div>
-
-            {/* 핏 적합도 & 거대한 픽셀풍 적합 비율 수치 병렬 배치 */}
+            {/* 1️⃣ [피드백 완벽 반영] 핏 적합도 영역을 가장 상단으로 리프팅! */}
             <div style={{ display: "flex", flexDirection: "column", gap: "2px", marginBottom: "4px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                 <span style={{ fontSize: "9px", fontWeight: "bold", color: "#71717a" }}>핏 적합도</span>
                 {/* ⓘ 도움말 안내 가이드 버튼 탑재! */}
-                <span 
+                <span
                   onClick={() => setShowFitGuideModal(true)}
                   style={{
                     width: "11px",
@@ -2299,8 +2407,8 @@ export default function Dashboard_Main() {
               </div>
             </div>
 
-            {/* 10개 점수 닷 인디케이터 (일치율 비례 점등) */}
-            <div style={{ display: "flex", gap: "3px" }}>
+            {/* 2️⃣ [피드백 완벽 반영] 10개 점수 닷 인디케이터를 핏 적합도 바로 아래로 리프팅! */}
+            <div style={{ display: "flex", gap: "3px", marginBottom: "10px" }}>
               {Array.from({ length: 10 }).map((_, i) => {
                 const isActive = i < Math.round(matchRate / 10);
                 return (
@@ -2316,6 +2424,27 @@ export default function Dashboard_Main() {
                 );
               })}
             </div>
+
+            {/* 3️⃣ [피드백 완벽 반영] 핏 조언 텍스트를 하단으로 내리고 초간결 조건부 렌더링! */}
+            {(() => {
+              const { warnComment, goodComment } = getDynamicFitComments(selectedProduct);
+              // 💡 [피드백 완벽 반영] 85점 미만(Caution/Warning)일 때는 부정 경고만 출력, 85점 이상(Good Fit)일 때는 긍정 칭찬만 출력!
+              const isGood = matchRate >= 85;
+              return (
+                <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
+                  {!isGood && warnComment && (
+                    <div style={{ fontSize: "9px", fontWeight: "900", color: "#ef4444", letterSpacing: "-0.3px" }}>
+                      {warnComment}
+                    </div>
+                  )}
+                  {isGood && goodComment && (
+                    <div style={{ fontSize: "9px", fontWeight: "900", color: "#10b981", letterSpacing: "-0.3px" }}>
+                      {goodComment}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
         </div>
 
@@ -4149,7 +4278,7 @@ export default function Dashboard_Main() {
     if (!showFitGuideModal) return null;
 
     return (
-      <div 
+      <div
         onClick={() => setShowFitGuideModal(false)}
         style={{
           position: "fixed",
@@ -4167,7 +4296,7 @@ export default function Dashboard_Main() {
           boxSizing: "border-box"
         }}
       >
-        <div 
+        <div
           onClick={(e) => e.stopPropagation()} // 내부 클릭 시 닫힘 방지
           style={{
             width: "100%",
