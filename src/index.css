@@ -330,14 +330,44 @@ input[type=number] {
   h4 {
     font-size: 12.8px !important;
   }
-  p, span, div, label {
+
+  /* 💡 [정합성 패치] span, div 등 레이아웃용 태그를 무차별 부풀리던 범용 룰을 폐기하고, 순수 본문과 폼 라벨만 안전 스케일 다운! */
+  p, .body-text, .form-label, .toast-msg, .alert-desc {
     font-size: 13px !important;
   }
 
-  /* 입력필드 여백 축소로 모바일 터치 최적화 */
+  /* 💡 [초중요!] 하단 내비게이션 바 라벨 찌그러짐 완전 봉쇄 및 콤팩트화 */
+  .bottom-nav-label {
+    font-family: var(--font-pixel) !important;
+    font-size: 8px !important; /* 7px에서 가독성이 좋게 8px로 초정밀 밀착 안착! */
+    line-height: 1.2 !important;
+    margin-top: 2px !important;
+    letter-spacing: 0px !important;
+    white-space: nowrap !important;
+  }
+
+  /* 💡 상단 가로스크롤 픽셀 탭 메뉴 크기 절대보호 */
+  .top-pixel-nav-label {
+    font-family: var(--font-pixel) !important;
+    font-size: 9.5px !important;
+    white-space: nowrap !important;
+    letter-spacing: 0.5px !important;
+  }
+
+  /* 💡 원형 카테고리 8종 라벨 폰트 크기 절대보호 및 컴팩트화 */
+  .circle-cat-label {
+    font-size: 9.5px !important;
+    margin-top: 6px !important;
+    color: #111111 !important;
+    white-space: nowrap !important;
+    letter-spacing: -0.3px !important;
+    font-weight: 700 !important;
+  }
+
+  /* 입력필드 여백 축소로 모바일 터치 최적화 및 강제 줌인 방지 */
   .styled-input {
-    padding: 10px 14px !important;
-    font-size: 13px !important;
+    padding: 8px 12px !important;
+    font-size: 16px !important; /* 💡 iOS 자동 줌인 원천 봉쇄용 16px 세팅! */
     border-radius: var(--radius-sm) !important;
   }
 

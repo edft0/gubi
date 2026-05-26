@@ -11,6 +11,7 @@ export default function Dashboard_Main() {
   const [view, setView] = useState("main");
   const [selectedCategory, setSelectedCategory] = useState("tshirt");
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [prevView, setPrevView] = useState("main"); // 📱 상세페이지 진입 직전의 뷰를 기억하는 백트래킹 상태
   const [cartItems, setCartItems] = useState([]);
   const [selectedCartIds, setSelectedCartIds] = useState([]);
   const [checkoutItems, setCheckoutItems] = useState([]);
@@ -59,10 +60,36 @@ export default function Dashboard_Main() {
   // [추가] 재판매 및 줄서기 제품 제어용 상태
   const [resellWear, setResellWear] = useState("worn"); // 'worn' | 'new'
 
+  // 📱 [모바일 최적화] 상세페이지 진입 직전의 뷰(예: 메인홈, 카테고리 뷰, 저장목록 등) 상태를 기억하는 지능형 백트래커!
+  useEffect(() => {
+    if (selectedProduct) {
+      if (view !== "detail") {
+        setPrevView(view);
+      }
+    }
+  }, [selectedProduct, view]);
+
   // 📱 [모바일 최적화] 대시보드 내 서브 화면(메인 ↔ 상품 상세페이지) 혹은 카테고리 전환 시, 스크롤 위치를 0.001초 만에 화면 최상단으로 자동 강제 워프 리셋!
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
   }, [view, selectedProduct, selectedCategory]);
+
+  // 📱 [대시보드 물리 뒤로가기 가드] 모바일 뒤로가기 터치 시 홈 화면(메인)으로 매끄럽게 복귀
+  useEffect(() => {
+    if (view === "main") return;
+
+    window.history.pushState(null, "", window.location.href);
+
+    const handleDashboardPop = () => {
+      setView(prevView || "main"); // 💡 무조건 main이 아니라, 들어왔던 직전 원래 화면으로 복원!
+      setSelectedProduct(null);
+    };
+
+    window.addEventListener("popstate", handleDashboardPop);
+    return () => {
+      window.removeEventListener("popstate", handleDashboardPop);
+    };
+  }, [view, prevView]);
   const [resellDefect, setResellDefect] = useState("none"); // 'none' | 'some' | 'yes'
   const [resellPrice, setResellPrice] = useState("248,000");
   const [queueTab, setQueueTab] = useState("alert"); // 'detail' | 'alert'
@@ -1042,6 +1069,7 @@ export default function Dashboard_Main() {
                     setSelectedCategory(cat.id);
                     setView("category");
                   }}
+                  className="top-pixel-nav-label"
                   style={{
                     fontFamily: "var(--font-pixel)",
                     fontSize: "9px",
@@ -1089,6 +1117,7 @@ export default function Dashboard_Main() {
             triggerToast("신발 및 잡화 상품은 실측 피팅 기능을 제공하지 않습니다.");
             return;
           }
+          setPrevView(view); // 💡 클릭 시점의 현재 뷰를 100% 동기적으로 안전 백업!
           setSelectedProduct(product);
           setView("detail");
         }}
@@ -1176,7 +1205,7 @@ export default function Dashboard_Main() {
 
           {/* 팝업 오버레이 툴팁 (warning 태그 호버 시 복원!) */}
           {hoveredBadgeProductId === product.id && badge && (
-            <div 
+            <div
               onClick={(e) => {
                 e.stopPropagation(); // 💡 [모바일 최적화] 클릭 버블링 소멸!
                 setHoveredBadgeProductId(null); // 💡 [모바일 최적화] 툴팁 터치 시 즉시 자연스럽게 닫히는 극상의 편리함!
@@ -1577,7 +1606,7 @@ export default function Dashboard_Main() {
                   {renderCategoryCircleIcon(cat.type)}
                 </div>
                 {/* 카테고리 라벨 검정 글씨 유지 */}
-                <span style={{ fontSize: "8.5px", color: "#111111", marginTop: "8px", textAlign: "center", whiteSpace: "nowrap", letterSpacing: "-0.2px", fontWeight: "600" }}>
+                <span className="circle-cat-label" style={{ fontSize: "8.5px", color: "#111111", marginTop: "8px", textAlign: "center", whiteSpace: "nowrap", letterSpacing: "-0.2px", fontWeight: "600" }}>
                   {cat.label}
                 </span>
               </div>
@@ -2185,6 +2214,40 @@ export default function Dashboard_Main() {
 
     return (
       <div className="animate-fade-in" style={{ background: "#ffffff", padding: "16px", textAlign: "left" }}>
+
+        {/* 📱 [모바일 최적화] 프리미엄 상단 뒤로가기 네비게이션 바 전격 주입! */}
+        <div style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          paddingBottom: "14px",
+          borderBottom: "1px solid rgba(0,0,0,0.05)",
+          marginBottom: "16px",
+          userSelect: "none"
+        }}>
+          {/* 뒤로가기 터치 영역을 대폭 확장하여 오작동 없는 쾌적 터치 제공! */}
+          <div
+            onClick={() => { setView(prevView || "main"); setSelectedProduct(null); }}
+            style={{
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "4px 8px",
+              marginLeft: "-8px"
+            }}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#111111" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </div>
+
+          {/* 중앙 프리미엄 미니멀리즘 빈 공간 (FIT ANALYSIS 제거) */}
+          <div style={{ flex: 1 }} />
+
+          {/* 우측 빈 대칭 스페이스 (정렬 유지용 더미) */}
+          <div style={{ width: "40px" }} />
+        </div>
 
         {/* 1. 상품 대형 캐러셀 일러스트레이션 박스 (시안과 100% 동일한 블랙 단선 테두리 프레임!) */}
         <div style={{
@@ -4877,7 +4940,7 @@ export default function Dashboard_Main() {
               }}
             >
               {renderTabIcon(tab.type, isSelected)}
-              <span style={{
+              <span className="bottom-nav-label" style={{
                 fontFamily: "var(--font-pixel)",
                 fontSize: "7px",
                 color: isSelected ? "#111111" : "#9ca3af",

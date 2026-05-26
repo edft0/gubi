@@ -21,6 +21,38 @@ function AppContent() {
     window.scrollTo({ top: 0, behavior: "instant" });
   }, [step]);
 
+  // 📱 [모바일 물리 뒤로가기 가드] 브라우저 자체 뒤로가기 클릭 시 사이트 튕김 방지 및 이전 단계 복원 인터셉터!
+  React.useEffect(() => {
+    // 현재 히스토리 상태를 인위적으로 브라우저 방문 기록에 찔러 넣어 뒤로가기 차단 준비
+    window.history.pushState(null, "", window.location.href);
+
+    const handlePopState = (e) => {
+      // 뒤로가기가 감지되면 강제로 튕겨나가지 않게 즉시 한 번 더 히스토리를 찔러 넣음
+      window.history.pushState(null, "", window.location.href);
+
+      // 현재 step 상태에 따른 정밀 역추적 제어
+      if (step === "dashboard") {
+        setStep(4);
+      } else if (step === 4) {
+        setStep(3);
+      } else if (step === 3) {
+        setStep(2);
+      } else if (step === 2 || step === 2.1 || step === 2.2) {
+        setStep(1);
+      } else if (step === 1) {
+        setStep(0);
+      } else if (step === 0 || step === "social_login") {
+        // 소셜 로그인 화면(맨 처음 화면)에서는 이전 페이지로 자연스럽게 나가도록 처리
+        window.history.go(-2);
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [step, setStep]);
+
   const accuracy = getFitAccuracy();
 
   // 어떤 단계 네비게이션 글자에 마우스가 맴도는지 관리하는 상태 (영롱한 호버 시각 대비용)
