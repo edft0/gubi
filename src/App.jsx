@@ -66,7 +66,7 @@ function AppContent() {
   const getNavStyle = (targetVal) => {
     const isActive = currentVal === targetVal;
     const isNavigable = targetVal < currentVal; // 나보다 앞선 과거
-    
+
     // 1. 현재 활성화된 주인공 단계 스타일
     if (isActive) {
       return {
@@ -78,7 +78,7 @@ function AppContent() {
         display: "inline-block"
       };
     }
-    
+
     // 2. 뒤로 되돌아갈 수 있는 과거 단계 스타일 (다이내믹 은은한 백색 hover + 1px 부유 효과)
     if (isNavigable) {
       const isHovered = hoveredNav === targetVal;
@@ -93,7 +93,7 @@ function AppContent() {
         display: "inline-block"
       };
     }
-    
+
     // 3. 아직 도달하지 못한 미래 단계 스타일 (잠금 회색 + 진입 금지 커서)
     return {
       color: "var(--text-muted)",
@@ -142,7 +142,7 @@ function AppContent() {
                 기본정보
               </span>
               <span style={{ color: "var(--text-muted)", userSelect: "none" }}>•</span>
-              
+
               <span
                 style={getNavStyle(2)}
                 onClick={() => handleNavClick(2)}
@@ -152,7 +152,7 @@ function AppContent() {
                 기준설정
               </span>
               <span style={{ color: "var(--text-muted)", userSelect: "none" }}>•</span>
-              
+
               <span
                 style={getNavStyle(3)}
                 onClick={() => handleNavClick(3)}
@@ -162,7 +162,7 @@ function AppContent() {
                 상세체형
               </span>
               <span style={{ color: "var(--text-muted)", userSelect: "none" }}>•</span>
-              
+
               <span
                 style={getNavStyle(4)}
                 onClick={() => handleNavClick(4)}

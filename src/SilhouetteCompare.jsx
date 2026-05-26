@@ -19,10 +19,13 @@ const normalizeMeasureCm = (m) => ({
 const hasAllPositiveMeasures = (m) => m.shoulder > 0 && m.chest > 0 && m.length > 0 && m.sleeve > 0;
 
 export const col = (diffCm) => {
-  if (diffCm < 0) return "#ef4444";
   const ad = Math.abs(diffCm);
-  if (ad <= COLOR_GREEN_MAX) return "#22c55e";
-  if (ad <= COLOR_YELLOW_MAX) return "#f59e0b";
+  if (ad <= COLOR_GREEN_MAX) {
+    return "#22c55e";
+  }
+  if (ad <= COLOR_YELLOW_MAX) {
+    return "#f59e0b";
+  }
   return "#ef4444";
 };
 
@@ -210,6 +213,68 @@ const calculatePantsGeometry = (measures, options = {}) => {
 };
 
 const polyPathFromPts = (pts) => `M ${pts.map((p) => `${p[0]} ${p[1]}`).join(" L ")} Z`;
+
+const getSingleOutlinePath = (g, category) => {
+  if (!g) return "";
+
+  const eps = 1e-6;
+
+  const dist2 = (a, b) => {
+    const dx = toFiniteNumber(a?.[0]) - toFiniteNumber(b?.[0]);
+    const dy = toFiniteNumber(a?.[1]) - toFiniteNumber(b?.[1]);
+    return dx * dx + dy * dy;
+  };
+
+  const attachIndex = (sleevePts, target) => {
+    if (!sleevePts || sleevePts.length < 4) return 0;
+    const a = sleevePts[0];
+    const b = sleevePts[1];
+    return dist2(target, a) <= dist2(target, b) + eps ? 0 : 1;
+  };
+
+  const sleeveOuterChain = (sleevePts, fromAttach, toAttach) => {
+    const iFrom = attachIndex(sleevePts, fromAttach);
+    const iTo = attachIndex(sleevePts, toAttach);
+
+    const fromOut = iFrom === 0 ? sleevePts[3] : sleevePts[2];
+    const toOut = iTo === 0 ? sleevePts[3] : sleevePts[2];
+
+    return [fromOut, toOut, toAttach];
+  };
+
+  const tl = [toFiniteNumber(g.trapTopLeftX), toFiniteNumber(g.trapTopY)];
+  const tr = [toFiniteNumber(g.trapTopRightX), toFiniteNumber(g.trapTopY)];
+
+  const bl = [toFiniteNumber(g.bodyLeftX), toFiniteNumber(g.bodyTopY)];
+  const br = [toFiniteNumber(g.bodyRightX), toFiniteNumber(g.bodyTopY)];
+
+  const bbl = [toFiniteNumber(g.bodyLeftX), toFiniteNumber(g.bodyBottomY)];
+  const bbr = [toFiniteNumber(g.bodyRightX), toFiniteNumber(g.bodyBottomY)];
+
+  const outlinePts = [bbl, bl];
+
+  if (g.triLeftPts && g.triLeftPts.length >= 3) {
+    const cL = g.triLeftPts[2];
+    outlinePts.push(...sleeveOuterChain(g.sleeveLeftPts, bl, cL));
+    outlinePts.push(tl);
+  } else {
+    outlinePts.push(...sleeveOuterChain(g.sleeveLeftPts, bl, tl));
+  }
+
+  outlinePts.push(tr);
+
+  if (g.triRightPts && g.triRightPts.length >= 3) {
+    const cR = g.triRightPts[2];
+    outlinePts.push(cR);
+    outlinePts.push(...sleeveOuterChain(g.sleeveRightPts, cR, br));
+  } else {
+    outlinePts.push(...sleeveOuterChain(g.sleeveRightPts, tr, br));
+  }
+
+  outlinePts.push(bbr);
+
+  return `M ${outlinePts.map((p) => `${p[0]} ${p[1]}`).join(" L ")} Z`;
+};
 
 const cuffPathFromSleeve = (pts, d) => {
   const t2 = pts[3];
@@ -664,34 +729,63 @@ const createTopOverlayPaths = (baseG, prodG, diffCm = null) => {
   }
 
   {
-    // 반팔과 긴팔의 이종 엇갈림 상태에서는 소매의 비정상적 색상 하이라이팅을 전면 미제공!
-    // (diffCm && diffCm.sleeve의 절대값이 25cm를 넘어선다면 반팔 vs 긴팔 엇갈림으로 판단!)
-    const diffSleeveCm = diffCm && Number.isFinite(diffCm.sleeve) ? diffCm.sleeve : 0;
-    if (Math.abs(diffSleeveCm) < 25) {
-      const baseEndL1 = baseG.sleeveLeftPts[3];
-      const baseEndL2 = baseG.sleeveLeftPts[2];
-      const prodEndL1 = prodG.sleeveLeftPts[3];
-      const prodEndL2 = prodG.sleeveLeftPts[2];
+    const mkBand = (baseC1, baseC2, prodC1, prodC2, dir) => {
+      const dx = toFiniteNumber(dir?.[0]);
+      const dy = toFiniteNumber(dir?.[1]);
+      const ln = Math.hypot(dx, dy) || 1;
+      const ux = dx / ln;
+      const uy = dy / ln;
 
-      if (
-        Math.hypot(baseEndL1[0] - prodEndL1[0], baseEndL1[1] - prodEndL1[1]) > eps ||
-        Math.hypot(baseEndL2[0] - prodEndL2[0], baseEndL2[1] - prodEndL2[1]) > eps
-      ) {
-        out.sleeve.push(quad(baseEndL1, prodEndL1, prodEndL2, baseEndL2));
-      }
+      const proj = (p, q) => {
+        const vx = toFiniteNumber(p?.[0]) - toFiniteNumber(q?.[0]);
+        const vy = toFiniteNumber(p?.[1]) - toFiniteNumber(q?.[1]);
+        return vx * ux + vy * uy;
+      };
 
-      const baseEndR1 = baseG.sleeveRightPts[3];
-      const baseEndR2 = baseG.sleeveRightPts[2];
-      const prodEndR1 = prodG.sleeveRightPts[3];
-      const prodEndR2 = prodG.sleeveRightPts[2];
+      const s1 = proj(prodC1, baseC1);
+      const s2 = proj(prodC2, baseC2);
+      const s = (s1 + s2) / 2;
 
-      if (
-        Math.hypot(baseEndR1[0] - prodEndR1[0], baseEndR1[1] - prodEndR1[1]) > eps ||
-        Math.hypot(baseEndR2[0] - prodEndR2[0], baseEndR2[1] - prodEndR2[1]) > eps
-      ) {
-        out.sleeve.push(quad(prodEndR1, baseEndR1, baseEndR2, prodEndR2));
-      }
-    }
+      if (Math.abs(s) <= eps) return null;
+
+      const t0 = Math.min(0, s);
+      const t1 = Math.max(0, s);
+
+      const shift = (p, t) => [toFiniteNumber(p?.[0]) + ux * t, toFiniteNumber(p?.[1]) + uy * t];
+
+      const a0 = shift(baseC1, t0);
+      const a1 = shift(baseC1, t1);
+      const b1 = shift(baseC2, t1);
+      const b0 = shift(baseC2, t0);
+
+      return quad(a0, a1, b1, b0);
+    };
+
+    const baseDirL = [
+      toFiniteNumber(baseG.sleeveLeftPts?.[3]?.[0]) - toFiniteNumber(baseG.sleeveLeftPts?.[0]?.[0]),
+      toFiniteNumber(baseG.sleeveLeftPts?.[3]?.[1]) - toFiniteNumber(baseG.sleeveLeftPts?.[0]?.[1])
+    ];
+
+    const baseEndL1 = baseG.sleeveLeftPts[3];
+    const baseEndL2 = baseG.sleeveLeftPts[2];
+    const prodEndL1 = prodG.sleeveLeftPts[3];
+    const prodEndL2 = prodG.sleeveLeftPts[2];
+
+    const bandL = mkBand(baseEndL1, baseEndL2, prodEndL1, prodEndL2, baseDirL);
+    if (bandL) out.sleeve.push(bandL);
+
+    const baseDirR = [
+      toFiniteNumber(baseG.sleeveRightPts?.[3]?.[0]) - toFiniteNumber(baseG.sleeveRightPts?.[0]?.[0]),
+      toFiniteNumber(baseG.sleeveRightPts?.[3]?.[1]) - toFiniteNumber(baseG.sleeveRightPts?.[0]?.[1])
+    ];
+
+    const baseEndR1 = baseG.sleeveRightPts[3];
+    const baseEndR2 = baseG.sleeveRightPts[2];
+    const prodEndR1 = prodG.sleeveRightPts[3];
+    const prodEndR2 = prodG.sleeveRightPts[2];
+
+    const bandR = mkBand(baseEndR1, baseEndR2, prodEndR1, prodEndR2, baseDirR);
+    if (bandR) out.sleeve.push(bandR);
   }
 
   {
@@ -720,61 +814,42 @@ export default function SilhouetteCompare({ userMeasure, productMeasure, categor
   const okU = hasAllPositiveMeasures(u);
   const okP = hasAllPositiveMeasures(p);
 
-  // 카테고리 디펜스 가드 장착!
-  const isCategoryMismatch = userMeasure && userMeasure.category && userMeasure.category !== category;
+  const isCategoryMismatch = userMeasure && userMeasure.category && userMeasure.category !== "none" && userMeasure.category !== category;
   const categoryName = category === "tshirt" ? "티셔츠" : category === "hoodie" ? "후드·맨투맨" : category === "outer" ? "아우터" : "팬츠";
 
   if (!okU || isCategoryMismatch) {
     if (isMini) {
       return (
-        <div style={{ 
-          fontSize: "8.5px", 
-          color: "#a1a1aa", 
-          textAlign: "center", 
-          padding: "16px 8px", 
-          background: "#18181b", 
-          border: "1px dashed rgba(255,255,255,0.15)",
-          borderRadius: "4px"
-        }}>
-          ⚠️ 인생 옷 미설정
+        <div style={{ fontSize: "8.5px", color: "#a1a1aa", textAlign: "center", padding: "16px 8px" }}>
+          {isCategoryMismatch ? "동일 카테고리 설정 시 대조 가능" : "인생 옷 설정 시 대조 가능"}
         </div>
       );
     }
     return (
-      <div
-        style={{
-          width: "100%",
-          height: "280px",
-          backgroundImage: "linear-gradient(rgba(229, 231, 235, 0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(229, 231, 235, 0.4) 1px, transparent 1px)",
-          backgroundSize: "14px 14px",
-          backgroundColor: "#ffffff",
-          border: "1.5px solid #e4e4e7",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "20px",
-          boxSizing: "border-box",
-          position: "relative"
-        }}
-      >
-        <div style={{
-          background: "rgba(24, 24, 27, 0.95)",
-          color: "#ffffff",
-          padding: "16px 20px",
-          borderRadius: "8px",
-          boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
-          maxWidth: "280px",
-          textAlign: "center"
-        }}>
-          <div style={{ fontSize: "16px", marginBottom: "8px" }}>📐 핏 대조 비활성화</div>
-          <p style={{ fontSize: "11px", color: "#a1a1aa", lineHeight: "1.5", margin: 0 }}>
-            {isCategoryMismatch
-              ? `현재 조회 중인 상품은 [${categoryName}] 카테고리입니다. 상단의 설정에서 동일한 카테고리의 인생 옷을 선택해 주세요.`
-              : `상단 인생 옷 선택 메뉴에서 [${categoryName}] 인생 옷을 설정하시면 정밀 실루엣 대조판이 활성화됩니다.`
-            }
-          </p>
-        </div>
+      <div style={{
+        width: "100%",
+        height: "280px",
+        backgroundImage: "linear-gradient(rgba(229, 231, 235, 0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(229, 231, 235, 0.4) 1px, transparent 1px)",
+        backgroundSize: "14px 14px",
+        backgroundColor: "rgba(0,0,0,0.3)",
+        borderRadius: "12px",
+        border: "1px solid var(--border-color)",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "20px",
+        boxSizing: "border-box",
+        textAlign: "center",
+        marginBottom: "16px"
+      }}>
+        <div style={{ fontSize: "16px", marginBottom: "8px", fontWeight: "bold", color: "#ffffff" }}>📐 핏 대조 비활성화</div>
+        <p style={{ fontSize: "11px", color: "#a1a1aa", lineHeight: "1.5", margin: 0, maxWidth: "240px" }}>
+          {isCategoryMismatch
+            ? `현재 조회 중인 상품은 [${categoryName}] 카테고리입니다. 상단의 설정에서 동일한 카테고리의 인생 옷을 선택해 주세요.`
+            : `상단의 설정 메뉴에서 [${categoryName}] 인생 옷을 설정하시면 정밀 실루엣 대조판이 활성화됩니다.`
+          }
+        </p>
       </div>
     );
   }
@@ -783,30 +858,42 @@ export default function SilhouetteCompare({ userMeasure, productMeasure, categor
 
   const BASE_SCALE = 3;
   const EX = 1.5;
-
-  // 💡 반팔-긴팔 대조 소매 엿가락 뒤틀림 방지 기하학적 평행 동기화 수식
-  const isSleeveMismatch = (u.sleeve < 35 && p.sleeve >= 50) || (p.sleeve < 35 && u.sleeve >= 50);
-  const sleeveDrawBase = isSleeveMismatch ? Math.max(u.sleeve, p.sleeve) : u.sleeve;
-  const sleeveDrawProd = isSleeveMismatch ? Math.max(u.sleeve, p.sleeve) : p.sleeve;
-
   const toPx = (m) => ({ sh: m.shoulder * BASE_SCALE, ch: m.chest * BASE_SCALE, le: m.length * BASE_SCALE, sl: m.sleeve * BASE_SCALE });
-
-  // 드로잉 좌표 계산용 프록시 객체 조립!
-  const uDraw = { ...u, sleeve: sleeveDrawBase };
-  const pDraw = { ...p, sleeve: sleeveDrawProd };
-
   const pEx = {
-    shoulder: uDraw.shoulder + (pDraw.shoulder - uDraw.shoulder) * EX,
-    chest: uDraw.chest + (pDraw.chest - uDraw.chest) * EX,
-    length: uDraw.length + (pDraw.length - uDraw.length) * EX,
-    sleeve: uDraw.sleeve + (pDraw.sleeve - uDraw.sleeve) * EX
+    shoulder: u.shoulder + (p.shoulder - u.shoulder) * EX,
+    chest: u.chest + (p.chest - u.chest) * EX,
+    length: u.length + (p.length - u.length) * EX,
+    sleeve: u.sleeve + (p.sleeve - u.sleeve) * EX
   };
-  const U = toPx(uDraw);
+  const U = toPx(u);
   const P = toPx(pEx);
+
+  // 💡 [피드백 완벽 반영] 소매 형태 비주얼 정규화 (Sleeve Geometry Visual Normalization)
+  // 반팔(35cm 미만)과 긴팔(35cm 이상)이 서로 비교될 때 실루엣이 찢어지거나 끊어지지 않도록 스케일링 보정
+  const isShortSleeveU = u.sleeve > 0 && u.sleeve < 35;
+  const isShortSleeveP = p.sleeve > 0 && p.sleeve < 35;
+
+  if (isShortSleeveU && !isShortSleeveP) {
+    // 기준 옷(반팔)을 구매 상품(긴팔) 형태에 맞추어 비주얼 소매 길이 확장
+    U.sl = U.le * 0.82;
+  } else if (!isShortSleeveU && isShortSleeveP) {
+    // 기준 옷(긴팔)을 구매 상품(반팔) 형태에 맞추어 비주얼 소매 길이 축소
+    U.sl = U.le * 0.28;
+  }
+
+
+  let computedSleeveDiff = p.sleeve - u.sleeve;
+  if (isShortSleeveU && !isShortSleeveP) {
+    // 기준 옷(반팔) ↔ 상품(긴팔): 긴팔 표준 오프셋(39.5cm)을 가산하여 현실적인 긴팔 비교 갭으로 보정
+    computedSleeveDiff = p.sleeve - (u.sleeve + 39.5);
+  } else if (!isShortSleeveU && isShortSleeveP) {
+    // 기준 옷(긴팔) ↔ 상품(반팔): 반팔 표준 오프셋을 환산하여 현실적인 비교 갭으로 보정
+    computedSleeveDiff = (p.sleeve + 39.5) - u.sleeve;
+  }
 
   const diff = {
     shoulder: p.shoulder - u.shoulder,
-    sleeve: p.sleeve - u.sleeve, // 텍스트나 편차 분석에는 물리적 원래 Cm 오차 노출!
+    sleeve: computedSleeveDiff,
     chest: p.chest - u.chest,
     length: p.length - u.length
   };
@@ -829,20 +916,41 @@ export default function SilhouetteCompare({ userMeasure, productMeasure, categor
 
     const okPants = (m) => m.waist > 0 && m.thigh > 0 && m.rise > 0 && m.length > 0;
 
-    if (!okPants(uPants) || !okPants(pPants)) {
+    const isPantsCategoryMismatch = userMeasure && userMeasure.category && userMeasure.category !== "none" && userMeasure.category !== "pants";
+
+    if (!okPants(uPants) || !okPants(pPants) || isPantsCategoryMismatch) {
+      if (isMini) {
+        return (
+          <div style={{ fontSize: "8.5px", color: "#a1a1aa", textAlign: "center", padding: "16px 8px" }}>
+            {isPantsCategoryMismatch ? "동일 카테고리 설정 시 대조 가능" : "인생 옷 설정 시 대조 가능"}
+          </div>
+        );
+      }
       return (
-        <div
-          style={{
-            background: "rgba(0,0,0,0.3)",
-            borderRadius: "12px",
-            padding: "14px 16px",
-            border: "1px solid var(--border-color)",
-            color: "var(--text-secondary)",
-            fontSize: "13px",
-            marginBottom: "16px"
-          }}
-        >
-          하의 실측 데이터를 입력하면 핏 비교가 가능해요
+        <div style={{
+          width: "100%",
+          height: "280px",
+          backgroundImage: "linear-gradient(rgba(229, 231, 235, 0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(229, 231, 235, 0.4) 1px, transparent 1px)",
+          backgroundSize: "14px 14px",
+          backgroundColor: "rgba(0,0,0,0.3)",
+          borderRadius: "12px",
+          border: "1px solid var(--border-color)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "20px",
+          boxSizing: "border-box",
+          textAlign: "center",
+          marginBottom: "16px"
+        }}>
+          <div style={{ fontSize: "16px", marginBottom: "8px", fontWeight: "bold", color: "#ffffff" }}>📐 핏 대조 비활성화</div>
+          <p style={{ fontSize: "11px", color: "#a1a1aa", lineHeight: "1.5", margin: 0, maxWidth: "240px" }}>
+            {isPantsCategoryMismatch
+              ? `현재 조회 중인 상품은 [팬츠] 카테고리입니다. 상단의 설정에서 동일한 카테고리의 인생 옷을 선택해 주세요.`
+              : `상단의 설정 메뉴에서 [팬츠] 인생 옷을 설정하시면 정밀 실루엣 대조판이 활성화됩니다.`
+            }
+          </p>
         </div>
       );
     }
@@ -889,8 +997,23 @@ export default function SilhouetteCompare({ userMeasure, productMeasure, categor
     const vb = `${minX} ${minY} ${maxX - minX} ${maxY - minY}`;
 
     return (
-      <div style={isMini ? { background: "transparent", padding: 0 } : { background: "#000000", borderRadius: "16px", padding: "16px", border: "1.5px solid #1e1e21", marginBottom: "16px", boxShadow: "0 10px 25px -5px rgba(0,0,0,0.3)" }}>
-        <svg viewBox={vb} width="100%" height={isMini ? "100" : "240"} preserveAspectRatio="xMidYMax meet" style={{ display: "block" }}>
+      <div style={isMini ? { background: "transparent", padding: 0 } : { position: "relative", background: "#000000", borderRadius: "16px", padding: "16px", border: "1.5px solid #1e1e21", marginBottom: "16px", boxShadow: "0 10px 25px -5px rgba(0,0,0,0.3)" }}>
+
+        {/* 💡 [피드백 완벽 반영] 좌측 상단 심플 범례 배치 */}
+        {!isMini && (
+          <div style={{ position: "absolute", top: "12px", left: "12px", display: "flex", gap: "10px", alignItems: "center", fontSize: "10px", color: "rgba(255,255,255,0.9)", fontWeight: "bold", zIndex: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+              <span style={{ width: "6px", height: "6px", borderRadius: "999px", background: "rgba(140,140,140,0.95)", display: "inline-block" }} />
+              <span>기준 옷</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+              <span style={{ width: "6px", height: "6px", borderRadius: "999px", background: "rgba(255,255,255,1)", display: "inline-block" }} />
+              <span>구매 상품</span>
+            </div>
+          </div>
+        )}
+
+        <svg viewBox={vb} width="100%" height={isMini ? "80" : "240"} preserveAspectRatio="xMidYMax meet" style={{ display: "block" }}>
           <g fill="rgba(140,140,140,0.5)" stroke="rgba(160,160,160,0.7)" strokeWidth="1.5" strokeLinejoin="round" strokeDasharray="3,3">
             <path d={PP.userShape} fillRule="evenodd" />
           </g>
@@ -921,8 +1044,8 @@ export default function SilhouetteCompare({ userMeasure, productMeasure, categor
             {isTopLayerPants(diffPants.length) && overlayPaths.length.map((d, i) => <path key={`pl-top-${i}`} d={d} fill={col(diffPants.length)} />)}
           </g>
 
-          {(() => {
-            if (isMini) return null; // 💡 미니 모드일 때는 세부 텍스트 캡슐을 전부 생략!
+          {/* 💡 [피드백 완벽 반영] isMini가 아닐 때만 상세 말풍선 표시 */}
+          {!isMini && (() => {
             const hipW = toFiniteNumber(productG?.hipW);
 
             const outerX = hipW / 2 + 24;
@@ -931,6 +1054,11 @@ export default function SilhouetteCompare({ userMeasure, productMeasure, categor
             const crotchY = toFiniteNumber(productG?.crotchY);
             const bottomY = toFiniteNumber(productG?.bottomY);
 
+            const formatCm = (v) => {
+              const rounded = Math.round(v * 10) / 10;
+              return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+            };
+
             return [
               { label: "허리", diff: diffPants.waist },
               { label: "밑위", diff: diffPants.rise },
@@ -938,16 +1066,18 @@ export default function SilhouetteCompare({ userMeasure, productMeasure, categor
               { label: "총장", diff: diffPants.length }
             ].map((item, idx) => {
               const v = toFiniteNumber(item.diff);
+              const ad = Math.abs(v);
+              const formatted = formatCm(v);
 
               let fontColor = "#ef4444";
-              let textContent = `${item.label} ${v > 0 ? `+${v}` : v}cm`;
+              let textContent = `${item.label} ${v > 0 ? `+${formatted}` : formatted}cm`;
 
-              if (v >= 0 && v <= COLOR_GREEN_MAX) {
+              if (ad <= COLOR_GREEN_MAX) {
                 fontColor = "#22c55e";
                 textContent = `${item.label} 딱 맞음`;
-              } else if ((v > -2 && v < 0) || (v > 1.5 && v <= COLOR_YELLOW_MAX)) {
+              } else if (ad <= COLOR_YELLOW_MAX) {
                 fontColor = "#f59e0b";
-                textContent = `${item.label} ${v > 0 ? `+${v}` : v}cm`;
+                textContent = `${item.label} ${v > 0 ? `+${formatted}` : formatted}cm`;
               }
 
               const isShort = textContent.length <= 5;
@@ -982,18 +1112,21 @@ export default function SilhouetteCompare({ userMeasure, productMeasure, categor
             });
           })()}
         </svg>
+
+        {/* 💡 [피드백 완벽 반영] 3색 신호등 가로 한 줄 정렬 */}
         {!isMini && (
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "16px", fontSize: "11px", color: "rgba(255,255,255,0.9)", fontWeight: "800" }}>
-            {/* 첫째 줄 (2개) */}
-            <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><span style={{ width: "8px", height: "8px", borderRadius: "999px", background: "rgba(130,130,130,0.95)", display: "inline-block" }} /><span>회색 내 체형</span></div>
-              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><span style={{ width: "8px", height: "8px", borderRadius: "999px", background: "rgba(255,255,255,0.85)", display: "inline-block" }} /><span>흰색 구매 상품</span></div>
+          <div style={{ display: "flex", justifyContent: "center", gap: "14px", alignItems: "center", marginTop: "12px", fontSize: "10px", color: "rgba(255,255,255,0.9)", fontWeight: "bold", borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: "10px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+              <span style={{ width: "6px", height: "6px", borderRadius: "999px", background: "#22c55e", display: "inline-block" }} />
+              <span>잘 맞음</span>
             </div>
-            {/* 둘째 줄 (3개) */}
-            <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><span style={{ width: "8px", height: "8px", borderRadius: "999px", background: "#22c55e", display: "inline-block" }} /><span>초록 잘 맞음</span></div>
-              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><span style={{ width: "8px", height: "8px", borderRadius: "999px", background: "#f59e0b", display: "inline-block" }} /><span>노랑 약간 차이</span></div>
-              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><span style={{ width: "8px", height: "8px", borderRadius: "999px", background: "#ef4444", display: "inline-block" }} /><span>빨강 주의</span></div>
+            <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+              <span style={{ width: "6px", height: "6px", borderRadius: "999px", background: "#f59e0b", display: "inline-block" }} />
+              <span>약간 차이</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+              <span style={{ width: "6px", height: "6px", borderRadius: "999px", background: "#ef4444", display: "inline-block" }} />
+              <span>주의</span>
             </div>
           </div>
         )}
@@ -1013,20 +1146,6 @@ export default function SilhouetteCompare({ userMeasure, productMeasure, categor
     triRightPts: g.triRightPts ? g.triRightPts.map((p) => [p[0], p[1] + dy]) : g.triRightPts
   });
 
-  // 💡 소매 자석 수평 평행이동 X-정합 기술 (어깨 너비 차이로 인한 소매 엇갈림 100% 완전 정복!)
-  const alignSleevesX = (baseG, prodG) => {
-    const dxLeft = baseG.trapTopLeftX - prodG.trapTopLeftX;
-    const dxRight = baseG.trapTopRightX - prodG.trapTopRightX;
-
-    return {
-      ...prodG,
-      sleeveLeftPts: prodG.sleeveLeftPts.map((p) => [p[0] + dxLeft, p[1]]),
-      sleeveRightPts: prodG.sleeveRightPts.map((p) => [p[0] + dxRight, p[1]]),
-      triLeftPts: prodG.triLeftPts ? prodG.triLeftPts.map((p) => [p[0] + dxLeft, p[1]]) : prodG.triLeftPts,
-      triRightPts: prodG.triRightPts ? prodG.triRightPts.map((p) => [p[0] + dxRight, p[1]]) : prodG.triRightPts
-    };
-  };
-
   const topOptions = {
     isHoodie: category === "hoodie",
     isOuter: category === "outer",
@@ -1035,17 +1154,45 @@ export default function SilhouetteCompare({ userMeasure, productMeasure, categor
 
   const baseGeom = calculateTopGeometry(U, topOptions);
   const prodGeomRaw = calculateTopGeometry(P, topOptions);
-  let prodGeom = (topOptions.isHoodie || topOptions.isOuter || topOptions.isTshirt)
+
+  const sleeveDirFrom = (g, side) => {
+    const pts = side === "L" ? g.sleeveLeftPts : g.sleeveRightPts;
+    const dx = toFiniteNumber(pts?.[3]?.[0]) - toFiniteNumber(pts?.[0]?.[0]);
+    const dy = toFiniteNumber(pts?.[3]?.[1]) - toFiniteNumber(pts?.[0]?.[1]);
+    const ln = Math.hypot(dx, dy) || 1;
+    return [dx / ln, dy / ln];
+  };
+
+  const rebuildSleeveWithDir = (pts, dir) => {
+    const a = pts[0];
+    const b = pts[1];
+    const dx = toFiniteNumber(pts?.[3]?.[0]) - toFiniteNumber(a?.[0]);
+    const dy = toFiniteNumber(pts?.[3]?.[1]) - toFiniteNumber(a?.[1]);
+    const len = Math.hypot(dx, dy) || 0;
+    const ox = toFiniteNumber(dir?.[0]) * len;
+    const oy = toFiniteNumber(dir?.[1]) * len;
+    const a2 = [toFiniteNumber(a?.[0]) + ox, toFiniteNumber(a?.[1]) + oy];
+    const b2 = [toFiniteNumber(b?.[0]) + ox, toFiniteNumber(b?.[1]) + oy];
+    return [a, b, b2, a2];
+  };
+
+  const alignProdY = (topOptions.isHoodie || topOptions.isOuter || topOptions.isTshirt);
+  const prodGeomAligned = alignProdY
     ? shiftGeomY(prodGeomRaw, baseGeom.trapTopY - prodGeomRaw.trapTopY)
     : prodGeomRaw;
 
-  // 어깨 너비 오차로 인한 소매 삐져나감 현상을 방지하기 위해 X축 수평 평행 정합 수행!
-  if (topOptions.isHoodie || topOptions.isOuter || topOptions.isTshirt) {
-    prodGeom = alignSleevesX(baseGeom, prodGeom);
-  }
+  const baseDirL = sleeveDirFrom(baseGeom, "L");
+  const baseDirR = sleeveDirFrom(baseGeom, "R");
+
+  const prodGeom = {
+    ...prodGeomAligned,
+    sleeveLeftPts: rebuildSleeveWithDir(prodGeomAligned.sleeveLeftPts, baseDirL),
+    sleeveRightPts: rebuildSleeveWithDir(prodGeomAligned.sleeveRightPts, baseDirR)
+  };
 
   const GU = createTopPaths(baseGeom, category);
   const GP = createTopPaths(prodGeom, category);
+  const productOutline = getSingleOutlinePath(prodGeom, category);
 
   const pad = 24;
   const bottomPad = 40;
@@ -1142,8 +1289,23 @@ export default function SilhouetteCompare({ userMeasure, productMeasure, categor
   );
 
   return (
-    <div style={isMini ? { background: "transparent", padding: 0 } : { background: "#000000", borderRadius: "16px", padding: "16px", border: "1.5px solid #1e1e21", marginBottom: "16px", boxShadow: "0 10px 25px -5px rgba(0,0,0,0.3)" }}>
-      <svg viewBox={vb} width="100%" height={isMini ? "100" : "220"} preserveAspectRatio="xMidYMax meet" style={{ display: "block" }}>
+    <div style={isMini ? { background: "transparent", padding: 0 } : { position: "relative", background: "#000000", borderRadius: "16px", padding: "16px", border: "1.5px solid #1e1e21", marginBottom: "16px", boxShadow: "0 10px 25px -5px rgba(0,0,0,0.3)" }}>
+
+      {/* 💡 [피드백 완벽 반영] 좌측 상단 심플 범례 배치 */}
+      {!isMini && (
+        <div style={{ position: "absolute", top: "12px", left: "12px", display: "flex", gap: "10px", alignItems: "center", fontSize: "10px", color: "rgba(255,255,255,0.9)", fontWeight: "bold", zIndex: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+            <span style={{ width: "6px", height: "6px", borderRadius: "999px", background: "rgba(140,140,140,0.95)", display: "inline-block" }} />
+            <span>기준 옷</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+            <span style={{ width: "6px", height: "6px", borderRadius: "999px", background: "rgba(255,255,255,1)", display: "inline-block" }} />
+            <span>구매 상품</span>
+          </div>
+        </div>
+      )}
+
+      <svg viewBox={vb} width="100%" height={isMini ? "80" : "220"} preserveAspectRatio="xMidYMax meet" style={{ display: "block" }}>
         <defs>{baseOnlyMask}</defs>
 
         <g fill="rgba(130,130,130,0.95)" stroke="rgba(95,95,95,0.95)" strokeWidth="1.5" strokeLinejoin="round" strokeDasharray="3,3">
@@ -1168,28 +1330,12 @@ export default function SilhouetteCompare({ userMeasure, productMeasure, categor
         {overlayLayerBelowProduct}
 
         {category === "tshirt" ? (
-          <g fill="none" stroke="rgba(255,255,255,0.95)" strokeWidth="5" strokeLinejoin="round">
-            <path d={GP.trap} fillRule="evenodd" />
-            {GP.triL && <path d={GP.triL} />}
-            {GP.triR && <path d={GP.triR} />}
-            <path d={GP.slL} />
-            <path d={GP.slR} />
-
-            <path d={`M ${prodGeom.bodyLeftX} ${prodGeom.bodyTopY} V ${prodGeom.bodyBottomY}`} />
-            <path d={`M ${prodGeom.bodyRightX} ${prodGeom.bodyTopY} V ${prodGeom.bodyBottomY}`} />
-            <path d={`M ${prodGeom.bodyLeftX} ${prodGeom.bodyBottomY} H ${prodGeom.bodyRightX}`} />
+          <g fill="none" stroke="rgba(255,255,255,0.95)" strokeWidth="5" strokeLinejoin="round" strokeLinecap="round">
+            <path d={productOutline} />
           </g>
         ) : (
-          <g fill="none" stroke="rgba(255,255,255,0.95)" strokeWidth="5" strokeLinejoin="round">
-            <path d={GP.trap} fillRule="evenodd" />
-            {GP.triL && <path d={GP.triL} />}
-            {GP.triR && <path d={GP.triR} />}
-            <path d={GP.slL} />
-            <path d={GP.slR} />
-
-            <path d={`M ${prodGeom.bodyLeftX} ${prodGeom.bodyTopY} V ${prodGeom.bodyBottomY}`} />
-            <path d={`M ${prodGeom.bodyRightX} ${prodGeom.bodyTopY} V ${prodGeom.bodyBottomY}`} />
-            <path d={`M ${prodGeom.bodyLeftX} ${prodGeom.bodyBottomY} H ${prodGeom.bodyRightX}`} />
+          <g fill="none" stroke="rgba(255,255,255,0.95)" strokeWidth="5" strokeLinejoin="round" strokeLinecap="round">
+            <path d={productOutline} />
 
             {category === "hoodie" && (GP.hoodOuter || GP.hood || GP.hemRib || GP.cuffL || GP.cuffR) && (
               <g>
@@ -1213,22 +1359,27 @@ export default function SilhouetteCompare({ userMeasure, productMeasure, categor
 
         {overlayLayerTop}
 
-        {(() => {
-          if (isMini) return null; // 💡 미니 모드일 때는 세부 텍스트 캡슐을 전부 생략!
+        {/* 💡 [피드백 완벽 반영] isMini가 아닐 때만 상세 말풍선 표시 */}
+        {!isMini && (() => {
+          const formatCm = (v) => {
+            const rounded = Math.round(v * 10) / 10;
+            return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+          };
+
           const mk = (label, v) => {
-            const rawV = toFiniteNumber(v);
-            // 💡 부동 소수점 부작용 (예: 2.700000000003)을 소수점 1자리로 깔끔하게 반사 차단!
-            const vv = Number(rawV.toFixed(1));
+            const vv = toFiniteNumber(v);
+            const ad = Math.abs(vv);
+            const formatted = formatCm(vv);
 
             let fontColor = "#ef4444";
-            let textContent = `${label} ${vv > 0 ? `+${vv}` : vv}cm`;
+            let textContent = `${label} ${vv > 0 ? `+${formatted}` : formatted}cm`;
 
-            if (vv >= 0 && vv <= COLOR_GREEN_MAX) {
+            if (ad <= COLOR_GREEN_MAX) {
               fontColor = "#22c55e";
               textContent = `${label} 딱 맞음`;
-            } else if ((vv > -2 && vv < 0) || (vv > COLOR_GREEN_MAX && vv <= COLOR_YELLOW_MAX)) {
+            } else if (ad <= COLOR_YELLOW_MAX) {
               fontColor = "#f59e0b";
-              textContent = `${label} ${vv > 0 ? `+${vv}` : vv}cm`;
+              textContent = `${label} ${vv > 0 ? `+${formatted}` : formatted}cm`;
             }
 
             const isShort = textContent.length <= 5;
@@ -1299,18 +1450,21 @@ export default function SilhouetteCompare({ userMeasure, productMeasure, categor
           });
         })()}
       </svg>
+
+      {/* 💡 [피드백 완벽 반영] 3색 신호등 가로 한 줄 정렬 */}
       {!isMini && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "16px", fontSize: "11px", color: "rgba(255,255,255,0.9)", fontWeight: "800" }}>
-          {/* 첫째 줄 (2개) */}
-          <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><span style={{ width: "8px", height: "8px", borderRadius: "999px", background: "rgba(130,130,130,0.95)", display: "inline-block" }} /><span>회색 내 체형</span></div>
-            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><span style={{ width: "8px", height: "8px", borderRadius: "999px", background: "rgba(255,255,255,0.85)", display: "inline-block" }} /><span>흰색 구매 상품</span></div>
+        <div style={{ display: "flex", justifyContent: "center", gap: "14px", alignItems: "center", marginTop: "12px", fontSize: "10px", color: "rgba(255,255,255,0.9)", fontWeight: "bold", borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: "10px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+            <span style={{ width: "6px", height: "6px", borderRadius: "999px", background: "#22c55e", display: "inline-block" }} />
+            <span>잘 맞음</span>
           </div>
-          {/* 둘째 줄 (3개) */}
-          <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><span style={{ width: "8px", height: "8px", borderRadius: "999px", background: "#22c55e", display: "inline-block" }} /><span>초록 잘 맞음</span></div>
-            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><span style={{ width: "8px", height: "8px", borderRadius: "999px", background: "#f59e0b", display: "inline-block" }} /><span>노랑 약간 차이</span></div>
-            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><span style={{ width: "8px", height: "8px", borderRadius: "999px", background: "#ef4444", display: "inline-block" }} /><span>빨강 주의</span></div>
+          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+            <span style={{ width: "6px", height: "6px", borderRadius: "999px", background: "#f59e0b", display: "inline-block" }} />
+            <span>약간 차이</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+            <span style={{ width: "6px", height: "6px", borderRadius: "999px", background: "#ef4444", display: "inline-block" }} />
+            <span>주의</span>
           </div>
         </div>
       )}

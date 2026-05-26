@@ -201,7 +201,7 @@ export default function Dashboard_Main() {
       id: "prod4",
       brand: "Polo Ralph Lauren",
       name: "폴로 랄프 로렌 칠드런 미니 케이블 코튼 가디건 헌터 네이비 (Mini Cable Cardigan)",
-      category: "tshirt",
+      category: "outer",
       price: "159,000",
       size: "l",
       image: "/polo_1.png",
@@ -209,19 +209,6 @@ export default function Dashboard_Main() {
       likes: 35,
       type: "sweater",
       measurements: { shoulder: 45, chest: 52, length: 68, sleeve: 60 }
-    },
-    {
-      id: "prod5",
-      brand: "Polo Ralph Lauren",
-      name: "폴로 랄프 로렌 클래식 핏 가먼트 다이드 옥스포드 셔츠 화이트 (Oxford Shirt White)",
-      category: "tshirt",
-      price: "179,000",
-      size: "l",
-      image: "/polo_2.png",
-      availableSizes: ["M", "L", "XL"],
-      likes: 48,
-      type: "tee",
-      measurements: { shoulder: 47, chest: 56, length: 75, sleeve: 62 }
     },
     {
       id: "prod6",
@@ -2300,18 +2287,6 @@ export default function Dashboard_Main() {
             }}>?</span>
           </div>
 
-          {/* 컬러 범례 지표 */}
-          <div style={{ display: "flex", gap: "8px", fontSize: "9px", fontWeight: "bold" }}>
-            <span style={{ display: "flex", alignItems: "center", gap: "3px", color: "#ef4444" }}>
-              <span style={{ width: "5.5px", height: "5.5px", borderRadius: "50%", background: "#ef4444" }}></span>더 작음
-            </span>
-            <span style={{ display: "flex", alignItems: "center", gap: "3px", color: "#10b981" }}>
-              <span style={{ width: "5.5px", height: "5.5px", borderRadius: "50%", background: "#10b981" }}></span>잘 맞음
-            </span>
-            <span style={{ display: "flex", alignItems: "center", gap: "3px", color: "#3b82f6" }}>
-              <span style={{ width: "5.5px", height: "5.5px", borderRadius: "50%", background: "#3b82f6" }}></span>더 큼
-            </span>
-          </div>
         </div>
 
         {/* 5. 실루엣 비교 종합 패널 (좌: 비교군 정보 칩, 우: AI 분석 일치율 요약) */}
