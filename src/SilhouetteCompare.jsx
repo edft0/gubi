@@ -821,7 +821,7 @@ export default function SilhouetteCompare({ userMeasure, productMeasure, categor
     if (isMini) {
       return (
         <div style={{ fontSize: "8.5px", color: "#a1a1aa", textAlign: "center", padding: "16px 8px" }}>
-          {isCategoryMismatch ? "동일 카테고리 설정 시 대조 가능" : "인생 옷 설정 시 대조 가능"}
+          {isCategoryMismatch ? "동일 카테고리 설정 시 대조 가능" : "기준 의류 설정 시 대조 가능"}
         </div>
       );
     }
@@ -846,8 +846,8 @@ export default function SilhouetteCompare({ userMeasure, productMeasure, categor
         <div style={{ fontSize: "16px", marginBottom: "8px", fontWeight: "bold", color: "#ffffff" }}>📐 핏 대조 비활성화</div>
         <p style={{ fontSize: "11px", color: "#a1a1aa", lineHeight: "1.5", margin: 0, maxWidth: "240px" }}>
           {isCategoryMismatch
-            ? `현재 조회 중인 상품은 [${categoryName}] 카테고리입니다. 상단의 설정에서 동일한 카테고리의 인생 옷을 선택해 주세요.`
-            : `상단의 설정 메뉴에서 [${categoryName}] 인생 옷을 설정하시면 정밀 실루엣 대조판이 활성화됩니다.`
+            ? `현재 조회 중인 상품은 [${categoryName}] 카테고리입니다. 상단의 설정에서 동일한 카테고리의 기준 의류를 선택해 주세요.`
+            : `상단의 설정 메뉴에서 [${categoryName}] 기준 의류를 설정하시면 정밀 실루엣 대조판이 활성화됩니다.`
           }
         </p>
       </div>
@@ -922,7 +922,7 @@ export default function SilhouetteCompare({ userMeasure, productMeasure, categor
       if (isMini) {
         return (
           <div style={{ fontSize: "8.5px", color: "#a1a1aa", textAlign: "center", padding: "16px 8px" }}>
-            {isPantsCategoryMismatch ? "동일 카테고리 설정 시 대조 가능" : "인생 옷 설정 시 대조 가능"}
+            {isPantsCategoryMismatch ? "동일 카테고리 설정 시 대조 가능" : "기준 의류 설정 시 대조 가능"}
           </div>
         );
       }
@@ -947,8 +947,8 @@ export default function SilhouetteCompare({ userMeasure, productMeasure, categor
           <div style={{ fontSize: "16px", marginBottom: "8px", fontWeight: "bold", color: "#ffffff" }}>📐 핏 대조 비활성화</div>
           <p style={{ fontSize: "11px", color: "#a1a1aa", lineHeight: "1.5", margin: 0, maxWidth: "240px" }}>
             {isPantsCategoryMismatch
-              ? `현재 조회 중인 상품은 [팬츠] 카테고리입니다. 상단의 설정에서 동일한 카테고리의 인생 옷을 선택해 주세요.`
-              : `상단의 설정 메뉴에서 [팬츠] 인생 옷을 설정하시면 정밀 실루엣 대조판이 활성화됩니다.`
+              ? `현재 조회 중인 상품은 [팬츠] 카테고리입니다. 상단의 설정에서 동일한 카테고리의 기준 의류를 선택해 주세요.`
+              : `상단의 설정 메뉴에서 [팬츠] 기준 의류를 설정하시면 정밀 실루엣 대조판이 활성화됩니다.`
             }
           </p>
         </div>

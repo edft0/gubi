@@ -3,6 +3,46 @@ import React, { useState, useEffect } from "react";
 import { useFitProfile } from "../context/FitProfileContext";
 import { CLOTHES_DB } from "../constants/clothesDB";
 
+const DB_IMAGE_MAP = {
+  // 티셔츠
+  t1: "/t1.png",
+  t2: "/t2.png",
+  t3: "/t3.png",
+  t4: "/t4.png",
+  t5: "/t5.png",
+  t6: "/t6.png",
+
+  // 후드·맨투맨
+  h1: "/h1.png",
+  h2: "/h2.png",
+  h3: "/h3.png",
+  h4: "/h4.png",
+  h5: "/h5.png",
+
+  // 아우터
+  o1: "/o1.png",
+  o2: "/o2.png",
+  o3: "/o3.png",
+  o4: "/o4.png",
+  o5: "/o5.png",
+  o6: "/o6.png",
+  o7: "/o7.png",
+  o8: "/o8.png",
+
+  // 팬츠
+  p1: "/p1.png",
+  p2: "/p2.png",
+  p3: "/p3.png",
+  p4: "/p4.png",
+  p5: "/p5.png",
+  p6: "/p6.png",
+  p7: "/p7.png",
+  p8: "/p8.png",
+  p9: "/p9.png",
+  p10: "/p10.png",
+  p11: "/p11.png"
+};
+
 export default function Step2_2_DbSelection() {
   const { profile, updateDbMeasures, setStep, resetMeasures } = useFitProfile();
   const { directMeasures, dbMeasures } = profile;
@@ -52,7 +92,7 @@ export default function Step2_2_DbSelection() {
     } else {
       // 2. 다른 사이즈 선택 시 토글 온(선택 완료) 및 전진 진행!
       const measurements = item.measurements[size];
-      
+
       updateDbMeasures(activeTab, {
         id: item.id,
         brand: item.brand,
@@ -70,10 +110,10 @@ export default function Step2_2_DbSelection() {
   // 다음 탭 혹은 단계로 순차 전진
   const moveToNextTabOrStep = () => {
     const currentIndex = tabSequence.indexOf(activeTab);
-    
+
     // 다음 탭들 중 의사 표시가 안 된 탭이 있는지 조회
     const nextEmptyTab = tabSequence.slice(currentIndex + 1).find(cat => !isCategoryCompleted(cat));
-    
+
     if (nextEmptyTab) {
       setActiveTab(nextEmptyTab);
     } else {
@@ -91,7 +131,7 @@ export default function Step2_2_DbSelection() {
   // 해당하는 옷이 없어요 수동 스킵 액션 처리 (필수 요건 우회 출구)
   const handleNoClothes = (e) => {
     e.preventDefault();
-    
+
     // 해당 카테고리는 스킵된 상태임을 더미 객체 형태로 각인시킴 (핏 분석 가점 대상에서 영리하게 배제)
     updateDbMeasures(activeTab, {
       id: "skipped_" + activeTab,
@@ -209,7 +249,7 @@ export default function Step2_2_DbSelection() {
         {filteredItems.map((item) => {
           const currentlySelected = dbMeasures && dbMeasures[activeTab];
           const isThisItemChosen = currentlySelected && currentlySelected.id === item.id;
-          
+
           return (
             <div
               key={item.id}
@@ -226,31 +266,40 @@ export default function Step2_2_DbSelection() {
                 textAlign: "center"
               }}
             >
-              {/* 의류 아이콘 이미지 데코 (높이 축소) */}
+              {/* 💡 [피드백 완벽 반영] 회원가입 DB 의류 실제 고해상도 이미지 데코 */}
               <div style={{
-                height: "85px",
-                background: "rgba(255,255,255,0.01)",
+                height: "110px",
+                background: "rgba(255, 255, 255, 0.02)",
                 borderRadius: "10px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 position: "relative",
                 marginBottom: "12px",
-                border: "1px solid rgba(255, 255, 255, 0.04)"
+                border: "1px solid rgba(255, 255, 255, 0.06)",
+                overflow: "hidden"
               }}>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "rgba(255, 255, 255, 0.15)" }}>
-                  <path d="M20.38 3.46 16 1.15a2 2 0 0 0-2 0L3.5 6.65a2 2 0 0 0-1 1.72v10.3a2 2 0 0 0 1 1.72L12 22.85a2 2 0 0 0 2 0l8.5-5a2 2 0 0 0 1-1.72V8.37a2 2 0 0 0-1-1.72l-2.12-1.25"/>
-                </svg>
+                <img
+                  src={DB_IMAGE_MAP[item.id] || "/gubi_logo.png"}
+                  alt={item.name}
+                  style={{
+                    height: "90%",
+                    objectFit: "contain",
+                    transition: "all 0.3s ease",
+                    filter: isThisItemChosen ? "drop-shadow(0 4px 8px rgba(255, 255, 255, 0.15))" : "none"
+                  }}
+                />
                 <span style={{
                   position: "absolute",
                   bottom: "4px",
-                  fontSize: "9px",
-                  color: "var(--text-muted)",
-                  fontWeight: "700",
+                  left: "4px",
+                  fontSize: "8.5px",
+                  color: "#ffffff",
+                  fontWeight: "900",
                   letterSpacing: "0.5px",
-                  background: "rgba(0,0,0,0.4)",
-                  padding: "1px 6px",
-                  borderRadius: "20px"
+                  background: "rgba(0, 0, 0, 0.65)",
+                  padding: "2px 6px",
+                  borderRadius: "6px"
                 }}>
                   {item.brand}
                 </span>
@@ -332,10 +381,10 @@ export default function Step2_2_DbSelection() {
                 setStep(3);
               }
             }}
-            style={{ 
-              flex: 1.5, 
-              padding: "16px", 
-              borderRadius: "12px", 
+            style={{
+              flex: 1.5,
+              padding: "16px",
+              borderRadius: "12px",
               fontWeight: "800",
               background: isAllCategoriesActioned ? "#ffffff" : "rgba(255, 255, 255, 0.05)",
               color: isAllCategoriesActioned ? "#09090b" : "rgba(255, 255, 255, 0.2)",

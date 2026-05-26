@@ -97,8 +97,8 @@ export const CLOTHES_DB = [
   // 2. 후드·맨투맨 (5종)
   {
     id: "h1",
-    brand: "챔피온/나이키",
-    name: "리버스위브 크루넥 / 나이키 클럽 크루 스웨트셔츠",
+    brand: "나이키",
+    name: "나이키 클럽 크루 스웨트셔츠",
     category: "hoodie",
     availableSizes: ["S", "M", "L", "XL", "XXL"],
     measurements: {
@@ -365,7 +365,7 @@ export const CLOTHES_DB = [
   },
   {
     id: "p6",
-    brand: "유니U",
+    brand: "유니클로U",
     name: "턱와이드팬츠",
     category: "pants",
     availableSizes: ["S(73)", "M(79)", "L(85)", "XL(91)", "XXL(95)"],
@@ -379,7 +379,7 @@ export const CLOTHES_DB = [
   },
   {
     id: "p7",
-    brand: "무한스탠다드",
+    brand: "무신사 스탠다드",
     name: "레플리카 퍼티그 팬츠",
     category: "pants",
     availableSizes: ["S(28)", "M(30)", "L(32)", "XL(34)", "XXL(38)"],
@@ -393,7 +393,7 @@ export const CLOTHES_DB = [
   },
   {
     id: "p8",
-    brand: "무한스탠다드",
+    brand: "무신사 스탠다드",
     name: "오피서",
     category: "pants",
     availableSizes: ["S(28)", "M(30)", "L(32)", "XL(34)", "XXL(38)"],
@@ -407,7 +407,7 @@ export const CLOTHES_DB = [
   },
   {
     id: "p9",
-    brand: "무한스탠다드",
+    brand: "무신사 스탠다드",
     name: "와이드데님",
     category: "pants",
     availableSizes: ["S(28)", "M(30)", "L(32)", "XL(34)", "XXL(38)"],
@@ -421,7 +421,7 @@ export const CLOTHES_DB = [
   },
   {
     id: "p10",
-    brand: "무한스탠다드",
+    brand: "무신사 스탠다드",
     name: "세미 와이드 슬릿 히든 밴딩 슬랙스",
     category: "pants",
     availableSizes: ["S(28)", "M(30)", "L(32)", "XL(34)", "XXL(38)"],
@@ -435,7 +435,7 @@ export const CLOTHES_DB = [
   },
   {
     id: "p11",
-    brand: "무한스탠다드",
+    brand: "무신사 스탠다드",
     name: "리얼 와이드 히든 밴딩 슬랙스",
     category: "pants",
     availableSizes: ["S(28)", "M(30)", "L(32)", "XL(34)", "XXL(38)"],
