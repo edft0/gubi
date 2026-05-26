@@ -58,6 +58,11 @@ export default function Dashboard_Main() {
   }, []);
   // [추가] 재판매 및 줄서기 제품 제어용 상태
   const [resellWear, setResellWear] = useState("worn"); // 'worn' | 'new'
+
+  // 📱 [모바일 최적화] 대시보드 내 서브 화면(메인 ↔ 상품 상세페이지) 혹은 카테고리 전환 시, 스크롤 위치를 0.001초 만에 화면 최상단으로 자동 강제 워프 리셋!
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [view, selectedProduct, selectedCategory]);
   const [resellDefect, setResellDefect] = useState("none"); // 'none' | 'some' | 'yes'
   const [resellPrice, setResellPrice] = useState("248,000");
   const [queueTab, setQueueTab] = useState("alert"); // 'detail' | 'alert'
@@ -1131,25 +1136,38 @@ export default function Dashboard_Main() {
               SOLD OUT
             </div>
           )}
-          {/* good/warn 픽셀 태그 칼 정렬 (마우스 호버 이벤트 연결 및 가상 피팅 지원 상품만 활성화!) */}
+          {/* good/warn 픽셀 태그 칼 정렬 (마우스 호버 및 모바일 초정밀 터치 토글 지원!) */}
           {isFitSupported && (
             <div
               onMouseEnter={() => setHoveredBadgeProductId(product.id)}
               onMouseLeave={() => setHoveredBadgeProductId(null)}
+              onTouchStart={(e) => {
+                e.stopPropagation(); // 💡 [모바일 초정밀 방어] 터치 시작 전파 완전 차단!
+              }}
+              onTouchEnd={(e) => {
+                e.stopPropagation(); // 💡 [모바일 초정밀 방어] 터치 종료 전파 완전 차단!
+                e.preventDefault();  // 💡 [모바일 초정밀 방어] 가상 마우스 클릭 발동 차단!
+                setHoveredBadgeProductId(prev => prev === product.id ? null : product.id); // 💡 터치 즉시 토글
+              }}
+              onClick={(e) => {
+                e.stopPropagation(); // 💡 [PC 마우스 보강] 클릭 버블링 방어
+                e.preventDefault();
+                setHoveredBadgeProductId(prev => prev === product.id ? null : product.id);
+              }}
               style={{
                 position: "absolute",
                 top: 0,
                 left: 0,
                 background: tagBgColor,
                 color: "#ffffff",
-                padding: "2.5px 6px", // [피드백 적극 반영] 카라 침범 없이 귀엽고 단단하게 축소된 패딩
-                fontSize: "7.5px", // 마이크로 픽셀 사이즈로 깃털처럼 가볍게 표현
-                fontFamily: "var(--font-pixel), monospace", // 시그니처 힙한 픽셀 폰트 완벽 복원!
-                zIndex: 10,
-                textTransform: "lowercase", // 트렌디한 소문자 칼정렬
+                padding: "4px 8px", // 💡 [모바일 최적화] 터치하기 쾌적하도록 패딩 영역 확장!
+                fontSize: "7.8px",
+                fontFamily: "var(--font-pixel), monospace",
+                zIndex: 15, // 💡 [모바일 최적화] 터치 이벤트가 확실히 받쳐주도록 레이어 업!
+                textTransform: "lowercase",
                 letterSpacing: "0.2px",
-                cursor: "help",
-                borderRadius: "0 0 4px 0" // 우하단 모서리에 슬림한 라운딩 포인트
+                cursor: "pointer",
+                borderRadius: "0 0 4px 0"
               }}
             >
               {tagText}
@@ -1158,23 +1176,30 @@ export default function Dashboard_Main() {
 
           {/* 팝업 오버레이 툴팁 (warning 태그 호버 시 복원!) */}
           {hoveredBadgeProductId === product.id && badge && (
-            <div style={{
-              position: "absolute",
-              top: "10px", // 윗 여백 공간 최적 활용!
-              left: "6px",
-              background: "rgba(10, 10, 12, 0.96)",
-              color: "#ffffff",
-              border: "1.5px solid #ffffff",
-              padding: "6px 6px",
-              zIndex: 1000,
-              width: "140px",
-              pointerEvents: "none",
-              boxShadow: "0 8px 20px rgba(0,0,0,0.65)",
-              display: "flex",
-              flexDirection: "column",
-              gap: "4px",
-              borderRadius: "4px"
-            }}>
+            <div 
+              onClick={(e) => {
+                e.stopPropagation(); // 💡 [모바일 최적화] 클릭 버블링 소멸!
+                setHoveredBadgeProductId(null); // 💡 [모바일 최적화] 툴팁 터치 시 즉시 자연스럽게 닫히는 극상의 편리함!
+              }}
+              style={{
+                position: "absolute",
+                top: "10px",
+                left: "6px",
+                background: "rgba(10, 10, 12, 0.98)",
+                color: "#ffffff",
+                border: "1.5px solid #ffffff",
+                padding: "6px 6px",
+                zIndex: 1000,
+                width: "140px",
+                pointerEvents: "auto", // 💡 [모바일 최적화] 터치 터치 시 닫기 클릭이 작동하게 auto로 조정!
+                boxShadow: "0 8px 20px rgba(0,0,0,0.65)",
+                display: "flex",
+                flexDirection: "column",
+                gap: "4px",
+                borderRadius: "4px",
+                cursor: "pointer"
+              }}
+            >
               {/* 💡 [피드백 완벽 반영] FIT SILHOUETTE 타이틀 전면 삭제하여 여백 공간 확보 및 메인 SVG 시인성 극대화! */}
 
               {/* 💡 확보된 공간만큼 SVG 높이를 96px로 늘리고 드로잉 스케일을 1.05배로 시원하게 확대! */}

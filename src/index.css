@@ -289,3 +289,40 @@ input::-webkit-inner-spin-button {
 input[type=number] {
   -moz-appearance: textfield;
 }
+
+/* 📱 [모바일 최적화] 스마트폰 전용 초프리미엄 반응형 미디어 쿼리 패키지 */
+@media (max-width: 768px) {
+  body {
+    padding: 8px; /* 모바일 좌우 여백을 미니멀하게 확장 */
+  }
+
+  /* 회원가입 카드 그리드 2열 콤팩트 배열 */
+  .grid-cols-mobile {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  /* 모바일 글래스 카드 여백 완화 */
+  .glass-card {
+    padding: 16px 12px !important;
+    border-radius: var(--radius-md) !important;
+  }
+
+  /* 핏 대조판 모바일 찌그러짐 원천 차단 */
+  .silhouette-compare-container {
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* 모바일 텍스트 폰트 보정 */
+  h1 {
+    font-size: 24px !important;
+  }
+  h2 {
+    font-size: 20px !important;
+  }
+  h3 {
+    font-size: 16px !important;
+  }
+}

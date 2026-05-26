@@ -16,6 +16,11 @@ function AppContent() {
   const { profile, setStep, resetMeasures, getFitAccuracy } = useFitProfile();
   const { step } = profile;
 
+  // 📱 [모바일 최적화] 온보딩 단계(스텝) 변경 시 자동으로 브라우저 스크롤 최상단 즉시 강제 리셋!
+  React.useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [step]);
+
   const accuracy = getFitAccuracy();
 
   // 어떤 단계 네비게이션 글자에 마우스가 맴도는지 관리하는 상태 (영롱한 호버 시각 대비용)
