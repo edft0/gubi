@@ -37,6 +37,6 @@ body {
     border-left: none;
     border-right: none;
     box-shadow: none;
-    padding: 24px 16px;
+    padding: 16px 12px; /* 💡 [모바일 최적화] 패딩 여백을 수축시켜 공간 효율을 극한으로 보강! */
   }
 }
