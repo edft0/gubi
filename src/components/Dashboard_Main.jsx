@@ -416,7 +416,7 @@ export default function Dashboard_Main() {
       availableSizes: ["S", "M", "L"],
       likes: 34,
       type: "pants",
-      measurements: { shoulder: 37.5, chest: 36.5, length: 57.5, sleeve: 33 }
+      measurements: { shoulder: 37.5, chest: 36.5, length: 105, sleeve: 33 } // 💡 [피드백 완벽 반영] 총장 57.5 -> 105로 현실적인 데님 긴바지 실측 정상화!
     },
     {
       id: "prod27",
@@ -443,7 +443,7 @@ export default function Dashboard_Main() {
       availableSizes: ["S", "M", "L"],
       likes: 41,
       type: "pants",
-      measurements: { shoulder: 38.5, chest: 35.7, length: 57, sleeve: 32 }
+      measurements: { shoulder: 38.5, chest: 35.7, length: 106, sleeve: 32 } // 💡 [피드백 완벽 반영] 총장 57 -> 106으로 현실적인 데님 긴바지 실측 정상화!
     },
     {
       id: "prod29",
@@ -469,7 +469,7 @@ export default function Dashboard_Main() {
       availableSizes: ["S", "M"],
       likes: 28,
       type: "pants",
-      measurements: { shoulder: 33, chest: 44, length: 78, sleeve: 0 }
+      measurements: { shoulder: 38, chest: 35, length: 104, sleeve: 31 } // 💡 [피드백 완벽 반영] 총장 78 -> 104로 및 허리/밑위 황금 비율 정상화!
     },
     {
       id: "prod31",
