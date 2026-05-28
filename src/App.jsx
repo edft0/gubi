@@ -169,7 +169,16 @@ function AppContent() {
         <div style={{ marginBottom: "32px", width: "100%", display: "flex", flexDirection: "column", gap: "12px" }}>
           {/* 상단 타임슬립 프로그레스 인디케이터 바 (상단 가운데 정렬) */}
           <div style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100%" }}>
-            <div style={{ display: "flex", gap: "8px", fontSize: "13px", fontWeight: "600", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ 
+              display: "flex", 
+              gap: "6px", 
+              fontSize: "10px", 
+              fontWeight: "900", 
+              alignItems: "center", 
+              justifyContent: "center",
+              fontFamily: "var(--font-pixel)", // 🔤 픽셀 도트체 전격 통일!
+              letterSpacing: "0.5px"
+            }}>
               <span
                 style={getNavStyle(1)}
                 onClick={() => handleNavClick(1)}
@@ -178,7 +187,7 @@ function AppContent() {
               >
                 기본정보
               </span>
-              <span style={{ color: "var(--text-muted)", userSelect: "none" }}>•</span>
+              <span style={{ color: "var(--text-muted)", userSelect: "none", fontSize: "8px" }}>◆</span>
 
               <span
                 style={getNavStyle(2)}
@@ -188,7 +197,7 @@ function AppContent() {
               >
                 기준설정
               </span>
-              <span style={{ color: "var(--text-muted)", userSelect: "none" }}>•</span>
+              <span style={{ color: "var(--text-muted)", userSelect: "none", fontSize: "8px" }}>◆</span>
 
               <span
                 style={getNavStyle(3)}
@@ -198,7 +207,7 @@ function AppContent() {
               >
                 상세체형
               </span>
-              <span style={{ color: "var(--text-muted)", userSelect: "none" }}>•</span>
+              <span style={{ color: "var(--text-muted)", userSelect: "none", fontSize: "8px" }}>◆</span>
 
               <span
                 style={getNavStyle(4)}
@@ -210,28 +219,29 @@ function AppContent() {
               </span>
             </div>
           </div>
-
-          {/* 게이지 바 */}
+ 
+          {/* 게이지 바 (보라색 그라데이션에서 깔끔한 ffffff 솔리드로 200% 교체!) */}
           <div style={{
             height: "6px",
-            background: "rgba(255, 255, 255, 0.05)",
-            borderRadius: "10px",
+            background: "rgba(255, 255, 255, 0.08)",
+            borderRadius: "0px", // 시크한 각진 라인아트 매칭
             overflow: "hidden",
-            width: "100%"
+            width: "100%",
+            border: "1px solid rgba(255, 255, 255, 0.15)"
           }}>
             <div style={{
               height: "100%",
               width: `${accuracy}%`,
-              background: "linear-gradient(90deg, #3b82f6 0%, #a855f7 100%)",
-              borderRadius: "10px",
+              background: "#ffffff", // 🤍 보라색 싹 날리고 순백색 솔리드 충전바 적용!
+              borderRadius: "0px",
               transition: "width 0.4s cubic-bezier(0.16, 1, 0.3, 1)"
             }}></div>
           </div>
-
+ 
           {/* 핏 분석 정확도 수치를 바 아래쪽으로 이동 */}
           <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "2px" }}>
-            <span style={{ fontSize: "12px", fontWeight: "700", color: "var(--secondary)" }}>
-              핏 분석 정확도: <span style={{ color: "#ffffff", fontWeight: "800" }}>{accuracy}%</span>
+            <span style={{ fontSize: "11px", fontWeight: "900", color: "#ffffff", fontFamily: "var(--font-pixel)" }}>
+              {accuracy}%
             </span>
           </div>
         </div>

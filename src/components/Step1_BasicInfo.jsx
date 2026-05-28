@@ -129,15 +129,15 @@ export default function Step1_BasicInfo() {
       </div>
 
       <div className="glass-card" style={{ padding: "32px", textAlign: "left", display: "flex", flexDirection: "column", gap: "28px" }}>
-        
+
         {/* STEP 1-0: 닉네임란 (최상단 신설!) */}
         <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
           <label className="form-label" style={{ fontSize: "14px", fontWeight: "700", color: "#ffffff" }}>
             닉네임 <span style={{ color: "#3b82f6", marginLeft: "2px" }}>*</span>
           </label>
           <div style={{ position: "relative" }}>
-            <input 
-              type="text" 
+            <input
+              type="text"
               className="styled-input"
               placeholder="예: 구비구비, koo12"
               value={localNickname}
@@ -163,8 +163,14 @@ export default function Step1_BasicInfo() {
             </span>
           )}
           {!nicknameError && isNicknameChecked && (
-            <span style={{ fontSize: "12.5px", color: "#34d399", fontWeight: "600", display: "block", marginTop: "2px", paddingLeft: "4px" }}>
-              ✓ 사용 가능한 닉네임입니다.
+            <span style={{ fontSize: "12.5px", color: "#34d399", fontWeight: "600", display: "flex", alignItems: "center", gap: "6px", marginTop: "2px", paddingLeft: "4px" }}>
+              <span style={{
+                fontFamily: "var(--font-pixel)",
+                fontSize: "10px",
+                color: "#34d399",
+                textShadow: "1.5px 1.5px 0px rgba(0, 0, 0, 0.4)", // 입체 섀도우!
+                userSelect: "none"
+              }}>v</span> 사용 가능한 닉네임입니다.
             </span>
           )}
         </div>
@@ -174,13 +180,13 @@ export default function Step1_BasicInfo() {
           <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "10px", borderTop: "1px solid rgba(255, 255, 255, 0.05)", paddingTop: "24px" }}>
             <label className="form-label" style={{ fontSize: "14px", fontWeight: "700", color: "#ffffff" }}>성별</label>
             <div style={{ display: "flex", gap: "12px" }}>
-              <div 
+              <div
                 onClick={() => handleGenderToggle("남")}
                 style={getToggleButtonStyle(gender === "남")}
               >
                 남성
               </div>
-              <div 
+              <div
                 onClick={() => handleGenderToggle("여")}
                 style={getToggleButtonStyle(gender === "여")}
               >
@@ -197,8 +203,8 @@ export default function Step1_BasicInfo() {
             <div style={{ display: "flex", gap: "16px" }}>
               <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
                 <div style={{ position: "relative" }}>
-                  <input 
-                    type="number" 
+                  <input
+                    type="number"
                     className="styled-input"
                     placeholder="키 (cm)"
                     value={localHeight}
@@ -213,8 +219,8 @@ export default function Step1_BasicInfo() {
 
               <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
                 <div style={{ position: "relative" }}>
-                  <input 
-                    type="number" 
+                  <input
+                    type="number"
                     className="styled-input"
                     placeholder="몸무게 (kg)"
                     value={localWeight}
@@ -235,9 +241,9 @@ export default function Step1_BasicInfo() {
           <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "14px", borderTop: "1px solid rgba(255, 255, 255, 0.05)", paddingTop: "24px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <label className="form-label" style={{ margin: 0, fontSize: "14px", fontWeight: "700", color: "#ffffff" }}>평소 사이즈</label>
-              
+
               <div style={{ display: "flex", background: "rgba(255,255,255,0.05)", borderRadius: "6px", padding: "2px" }}>
-                <button 
+                <button
                   onClick={() => {
                     setActiveSizeType("alphabet");
                     if (usualSize && !alphabetSizes.includes(usualSize)) {
@@ -258,7 +264,7 @@ export default function Step1_BasicInfo() {
                 >
                   알파벳
                 </button>
-                <button 
+                <button
                   onClick={() => {
                     setActiveSizeType("number");
                     if (usualSize && !numberSizes.includes(usualSize)) {
@@ -325,21 +331,21 @@ export default function Step1_BasicInfo() {
         {/* STEP 1-4: 하단 이전/다음 단계 이동 버튼군 */}
         {isNicknameChecked && isGenderSelected && isHeightWeightValid && isUsualSizeSelected && (
           <div className="animate-fade-in" style={{ display: "flex", gap: "12px", borderTop: "1px solid rgba(255, 255, 255, 0.05)", paddingTop: "24px" }}>
-            <button 
-              className="btn-secondary" 
+            <button
+              className="btn-secondary"
               onClick={() => setStep(0)}
               style={{ flex: 1, padding: "16px", borderRadius: "12px", fontWeight: "700" }}
             >
               이전
             </button>
-            <button 
-              className="btn-primary" 
+            <button
+              className="btn-primary"
               onClick={handleNext}
               disabled={!isFormValid}
-              style={{ 
-                flex: 2, 
-                padding: "16px", 
-                borderRadius: "12px", 
+              style={{
+                flex: 2,
+                padding: "16px",
+                borderRadius: "12px",
                 fontWeight: "800",
                 background: "#ffffff",
                 color: "#09090b",

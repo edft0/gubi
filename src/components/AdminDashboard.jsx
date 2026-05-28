@@ -18,17 +18,51 @@ export default function AdminDashboard() {
   };
 
   // 검색 필터링
-  const filteredUsers = (usersList || []).filter(u => 
+  const filteredUsers = (usersList || []).filter(u =>
     u.nickname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     u.usualSize?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // 📈 [실시간 클릭 데이터 추출] 로컬 스토리지에서 제품 클릭 통계 로드
+  const getProductClicks = () => {
+    try {
+      const savedClicks = localStorage.getItem("gubi_product_clicks");
+      if (!savedClicks) return [];
+      const parsed = JSON.parse(savedClicks);
+      // 가장 클릭수가 많은 내림차순 정렬하여 상위 3개만 추출
+      return parsed.sort((a, b) => b.count - a.count).slice(0, 3);
+    } catch (e) {
+      return [];
+    }
+  };
+
+  const topClickedProducts = getProductClicks();
+
+  // 👥 [성별 분포 비율 연산]
+  const totalUsersCount = (usersList || []).length;
+  const maleCount = (usersList || []).filter(u => u.gender === "남").length;
+  const femaleCount = (usersList || []).filter(u => u.gender === "여").length;
+  const maleRatio = totalUsersCount > 0 ? Math.round((maleCount / totalUsersCount) * 100) : 50;
+  const femaleRatio = totalUsersCount > 0 ? Math.round((femaleCount / totalUsersCount) * 100) : 50;
+
+  // ⚡ [데이터 초기화 및 데이터 리셋 엔진]
+  const handleResetData = () => {
+    if (window.confirm("⚠️ 경고: 수집된 모든 가입 회원 체형 분포 데이터와 상품 클릭(조회) 통계가 전부 초기화되고 디폴트 샘플 데이터로 복원됩니다. 정말 초기화하시겠습니까?")) {
+      // 1. 클릭수 리셋
+      localStorage.removeItem("gubi_product_clicks");
+      // 2. 가입 프로필 초기화 (기본 DB 복원)
+      localStorage.removeItem("gubi_fit_profile");
+      // 3. 강제 리로드하여 화면 갱신
+      window.location.reload();
+    }
+  };
+
   // 통계 연산
   const totalUsers = filteredUsers.length;
-  const avgHeight = totalUsers > 0 
+  const avgHeight = totalUsers > 0
     ? Math.round(filteredUsers.reduce((acc, cur) => acc + Number(cur.height || 0), 0) / totalUsers)
     : 0;
-  const avgWeight = totalUsers > 0 
+  const avgWeight = totalUsers > 0
     ? Math.round(filteredUsers.reduce((acc, cur) => acc + Number(cur.weight || 0), 0) / totalUsers)
     : 0;
 
@@ -86,13 +120,33 @@ export default function AdminDashboard() {
           </p>
         </div>
 
-        <button
-          onClick={() => setStep(0)}
-          className="btn-secondary"
-          style={{ padding: "10px 20px", fontSize: "13px", fontWeight: "600", borderRadius: "10px" }}
-        >
-          로그아웃 ↩️
-        </button>
+        <div style={{ display: "flex", gap: "10px" }}>
+          <button
+            onClick={handleResetData}
+            style={{
+              padding: "10px 18px",
+              fontSize: "13px",
+              fontWeight: "bold",
+              borderRadius: "10px",
+              border: "1px solid rgba(239, 68, 68, 0.3)",
+              background: "rgba(239, 68, 68, 0.08)",
+              color: "#f87171",
+              cursor: "pointer",
+              transition: "all 0.2s"
+            }}
+            onMouseEnter={(e) => { e.target.style.background = "#ef4444"; e.target.style.color = "#ffffff"; }}
+            onMouseLeave={(e) => { e.target.style.background = "rgba(239, 68, 68, 0.08)"; e.target.style.color = "#f87171"; }}
+          >
+            ⚡ 피드백 통계 리셋
+          </button>
+          <button
+            onClick={() => setStep(0)}
+            className="btn-secondary"
+            style={{ padding: "10px 20px", fontSize: "13px", fontWeight: "600", borderRadius: "10px" }}
+          >
+            로그아웃 ↩️
+          </button>
+        </div>
       </div>
 
       {/* KPI 통계 카드 위젯 */}
@@ -157,6 +211,118 @@ export default function AdminDashboard() {
           <p style={{ fontSize: "11px", color: "var(--text-secondary)", marginTop: "8px" }}>
             가입 회원들의 산술적인 평균 몸무게 스펙
           </p>
+        </div>
+      </div>
+
+      {/* 📊 [신규] 실시간 테스터 행동 분석 및 선호 통계 모니터링 레이아웃 */}
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+        gap: "24px",
+        marginBottom: "36px"
+      }}>
+        {/* 1. 상품 조회 랭킹 TOP 3 */}
+        <div className="glass-card" style={{
+          padding: "24px",
+          background: "rgba(255, 255, 255, 0.02)",
+          border: "1px solid rgba(255, 255, 255, 0.07)",
+          borderRadius: "16px",
+          textAlign: "left"
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "18px" }}>
+            <span style={{ fontSize: "16px" }}>🔥</span>
+            <span style={{ fontSize: "14px", fontWeight: "800", color: "#ffffff", letterSpacing: "0.5px" }}>
+              실시간 테스터 인기 조회 상품 TOP 3
+            </span>
+          </div>
+
+          {topClickedProducts.length === 0 ? (
+            <div style={{ padding: "30px 10px", textAlign: "center", color: "var(--text-muted)", fontSize: "13px" }}>
+              아직 조회된 상품 로그가 없습니다. 테스터들이 모바일에서 상품을 클릭하면 실시간으로 차트가 집계됩니다! 📊
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+              {topClickedProducts.map((p, idx) => {
+                // 최대 조회수를 구해서 비율 계산
+                const maxCount = Math.max(...topClickedProducts.map(x => x.count), 1);
+                const percent = Math.round((p.count / maxCount) * 100);
+
+                let rankColor = "#ef4444"; // 1등 빨강
+                if (idx === 1) rankColor = "#f59e0b"; // 2등 주황
+                if (idx === 2) rankColor = "#10b981"; // 3등 초록
+
+                return (
+                  <div key={p.id} style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px" }}>
+                      <span style={{ fontWeight: "700", color: "#ffffff" }}>
+                        <span style={{ color: rankColor, marginRight: "8px", fontWeight: "900" }}>{idx + 1}위</span>
+                        {p.brand} — {p.name}
+                      </span>
+                      <strong style={{ color: rankColor, fontFamily: "var(--font-pixel)" }}>{p.count}회 클릭</strong>
+                    </div>
+                    {/* 게이지바 */}
+                    <div style={{ width: "100%", height: "8px", background: "rgba(255,255,255,0.05)", borderRadius: "4px", overflow: "hidden" }}>
+                      <div style={{ width: `${percent}%`, height: "100%", background: `linear-gradient(90deg, ${rankColor} 0%, rgba(255,255,255,0.8) 100%)`, borderRadius: "4px", transition: "width 0.5s ease" }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* 2. 가입 테스터 성별 비율 분포 */}
+        <div className="glass-card" style={{
+          padding: "24px",
+          background: "rgba(255, 255, 255, 0.02)",
+          border: "1px solid rgba(255, 255, 255, 0.07)",
+          borderRadius: "16px",
+          textAlign: "left"
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "18px" }}>
+            <span style={{ fontSize: "16px" }}>👥</span>
+            <span style={{ fontSize: "14px", fontWeight: "800", color: "#ffffff", letterSpacing: "0.5px" }}>
+              가입 테스터 성별 분포
+            </span>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "20px", justifyContent: "center", height: "calc(100% - 40px)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13.5px" }}>
+              <span style={{ color: "#60a5fa", fontWeight: "bold" }}>남성 {maleCount}명 ({maleRatio}%)</span>
+              <span style={{ color: "#c084fc", fontWeight: "bold" }}>여성 {femaleCount}명 ({femaleRatio}%)</span>
+            </div>
+
+            {/* 세련된 가로형 파이차트 바 */}
+            <div style={{
+              width: "100%",
+              height: "24px",
+              background: "rgba(255,255,255,0.05)",
+              borderRadius: "12px",
+              display: "flex",
+              overflow: "hidden",
+              border: "1.5px solid rgba(0,0,0,0.5)"
+            }}>
+              {totalUsersCount === 0 ? (
+                <div style={{ width: "100%", height: "100%", background: "rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", color: "#6b7280", fontSize: "11px" }}>
+                  테스터 가입 데이터 없음
+                </div>
+              ) : (
+                <>
+                  <div style={{ width: `${maleRatio}%`, background: "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)", transition: "width 0.5s ease" }} />
+                  <div style={{ width: `${femaleRatio}%`, background: "linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)", transition: "width 0.5s ease" }} />
+                </>
+              )}
+            </div>
+
+            <div style={{ display: "flex", gap: "16px", justifyContent: "center", fontSize: "11px", color: "var(--text-secondary)" }}>
+              <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <span style={{ width: "8px", height: "8px", background: "#3b82f6", borderRadius: "50%" }} /> 남성
+              </span>
+              <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <span style={{ width: "8px", height: "8px", background: "#a855f7", borderRadius: "50%" }} /> 여성
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -570,7 +736,7 @@ export default function AdminDashboard() {
               >
                 상세 정보 닫기
               </button>
-              
+
               <button
                 onClick={(e) => {
                   handleDelete(e, selectedUser.nickname);

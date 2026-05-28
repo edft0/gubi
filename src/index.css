@@ -4,7 +4,7 @@
 
 :root {
   /* 프리미엄 미니멀 Monochrome 흑백 테마 */
-  --bg-dark: #09090b;
+  --bg-dark: #000000;
   /* 극도의 시크한 딥 차콜 블랙 */
   --bg-card: rgba(20, 20, 23, 0.7);
   --bg-input: rgba(28, 28, 30, 0.6);

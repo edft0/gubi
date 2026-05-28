@@ -56,7 +56,7 @@ export default function Step2_1_DirectInput() {
   }, [activeTab, directMeasures]);
 
   // 다음 카테고리로의 스무스한 이동 처리
-  const moveToNextTabOrStep = () => {
+  const moveToNextTabOrStep = (nextMeasuresState = directMeasures) => {
     const currentIndex = tabSequence.indexOf(activeTab);
     if (currentIndex < tabSequence.length - 1) {
       // 다음 카테고리 탭으로 전진
@@ -64,20 +64,39 @@ export default function Step2_1_DirectInput() {
     } else {
       // 마지막 탭(pants)이었을 경우: 직접 입력에서 건너뛴 범주 목록을 추출하여 DB 선택에서 메울지 결정!
       const skippedCategories = [];
-      const { tshirt, hoodie, outer, pants } = directMeasures;
+      const { tshirt, hoodie, outer, pants } = nextMeasuresState;
 
-      if (!(tshirt.length > 0 && tshirt.shoulder > 0 && tshirt.chest > 0 && tshirt.sleeve > 0)) {
-        skippedCategories.push("tshirt");
-      }
-      if (!(hoodie.length > 0 && hoodie.shoulder > 0 && hoodie.chest > 0 && hoodie.sleeve > 0)) {
-        skippedCategories.push("hoodie");
-      }
-      if (!(outer.length > 0 && outer.shoulder > 0 && outer.chest > 0 && outer.sleeve > 0)) {
-        skippedCategories.push("outer");
-      }
-      if (!(pants.length > 0 && pants.waist > 0 && pants.hip > 0 && pants.thigh > 0 && pants.rise > 0 && pants.hem > 0)) {
-        skippedCategories.push("pants");
-      }
+      // 각 범주가 유효한 실측 수치(각각 0보다 큼)를 가지고 있는지 동기적으로 검증
+      const hasTshirt = tshirt && 
+        Number(tshirt.length) > 0 && 
+        Number(tshirt.shoulder) > 0 && 
+        Number(tshirt.chest) > 0 && 
+        Number(tshirt.sleeve) > 0;
+
+      const hasHoodie = hoodie && 
+        Number(hoodie.length) > 0 && 
+        Number(hoodie.shoulder) > 0 && 
+        Number(hoodie.chest) > 0 && 
+        Number(hoodie.sleeve) > 0;
+
+      const hasOuter = outer && 
+        Number(outer.length) > 0 && 
+        Number(outer.shoulder) > 0 && 
+        Number(outer.chest) > 0 && 
+        Number(outer.sleeve) > 0;
+
+      const hasPants = pants && 
+        Number(pants.length) > 0 && 
+        Number(pants.waist) > 0 && 
+        Number(pants.hip) > 0 && 
+        Number(pants.thigh) > 0 && 
+        Number(pants.rise) > 0 && 
+        Number(pants.hem) > 0;
+
+      if (!hasTshirt) skippedCategories.push("tshirt");
+      if (!hasHoodie) skippedCategories.push("hoodie");
+      if (!hasOuter) skippedCategories.push("outer");
+      if (!hasPants) skippedCategories.push("pants");
 
       if (skippedCategories.length > 0) {
         // 건너뛴 범주가 단 하나라도 존재한다면 영리하게 DB 의류 선택 단계로 인도!
@@ -91,33 +110,41 @@ export default function Step2_1_DirectInput() {
 
   // 다음 버튼 인터랙션 (현재 탭 수치 저장 후 다음 탭/단계로 이동)
   const handleNext = () => {
+    const updatedMeasures = { ...directMeasures };
+
     if (isPants) {
       if (!localLength || !localWaist || !localHip || !localThigh || !localRise || !localHem) return;
-      updateDirectMeasures("pants", {
+      const pantsData = {
         length: Number(localLength),
         waist: Number(localWaist),
         hip: Number(localHip),
         thigh: Number(localThigh),
         rise: Number(localRise),
         hem: Number(localHem)
-      });
+      };
+      updatedMeasures.pants = pantsData;
+      updateDirectMeasures("pants", pantsData);
     } else {
       if (!localLength || !localShoulder || !localChest || !localSleeve) return;
-      updateDirectMeasures(activeTab, {
+      const currentData = {
         length: Number(localLength),
         shoulder: Number(localShoulder),
         chest: Number(localChest),
         sleeve: Number(localSleeve)
-      });
+      };
+      updatedMeasures[activeTab] = currentData;
+      updateDirectMeasures(activeTab, currentData);
     }
-    // 다음 카테고리 혹은 세부체형 단계로 전진
-    moveToNextTabOrStep();
+
+    // 최신 상태를 담아 동기식으로 즉시 분기 탐색!
+    moveToNextTabOrStep(updatedMeasures);
   };
 
   // 잘 모르겠어요 | 건너뛰기 인터랙션 (수치 기입 없이 다음 탭/단계로 스킵)
   const handleSkip = (e) => {
     e.preventDefault();
-    moveToNextTabOrStep();
+    // 잘 모르겠음으로 넘어갈 때는 수치 기입이 없었으므로 현재 directMeasures 그대로 전달
+    moveToNextTabOrStep(directMeasures);
   };
 
   // 현재 탭의 모든 폼 수치가 채워져 있는지 유효성 감사

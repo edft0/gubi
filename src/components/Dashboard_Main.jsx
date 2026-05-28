@@ -69,6 +69,31 @@ export default function Dashboard_Main() {
     }
   }, [selectedProduct, view]);
 
+  // 📈 [실시간 피드백 데이터 수집 엔진] 테스터들이 대조 분석을 터치하여 조회한 상품 로그 축적
+  const logProductClick = (product) => {
+    try {
+      const savedClicks = localStorage.getItem("gubi_product_clicks");
+      let clicksArray = savedClicks ? JSON.parse(savedClicks) : [];
+
+      const existing = clicksArray.find(item => item.id === product.id);
+      if (existing) {
+        existing.count += 1;
+      } else {
+        clicksArray.push({
+          id: product.id,
+          name: product.name,
+          brand: product.brand,
+          category: product.category || "pants",
+          count: 1
+        });
+      }
+
+      localStorage.setItem("gubi_product_clicks", JSON.stringify(clicksArray));
+    } catch (e) {
+      console.error("Error logging product click:", e);
+    }
+  };
+
   // 📱 [모바일 최적화] 대시보드 내 서브 화면(메인 ↔ 상품 상세페이지) 혹은 카테고리 전환 시, 스크롤 위치를 0.001초 만에 화면 최상단으로 자동 강제 워프 리셋!
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -1117,6 +1142,7 @@ export default function Dashboard_Main() {
             triggerToast("신발 및 잡화 상품은 실측 피팅 기능을 제공하지 않습니다.");
             return;
           }
+          logProductClick(product); // 📈 [실시간 데이터 수집] 테스터 조회 카운트 즉시 갱신!
           setPrevView(view); // 💡 클릭 시점의 현재 뷰를 100% 동기적으로 안전 백업!
           setSelectedProduct(product);
           setView("detail");
@@ -2374,7 +2400,6 @@ export default function Dashboard_Main() {
               fontWeight: "bold"
             }}>?</span>
           </div>
-
         </div>
 
         {/* 5. 실루엣 비교 종합 패널 (좌: 비교군 정보 칩, 우: AI 분석 일치율 요약) */}
@@ -2430,11 +2455,10 @@ export default function Dashboard_Main() {
 
           {/* 우열: AI 추천 핏 설명 + 일치도 10개 서클 점수판 */}
           <div style={{ display: "flex", flexDirection: "column", textAlign: "left", padding: "10px 12px", background: "#f4f4f5", borderRadius: "10px", justifyContent: "center" }}>
-            {/* 1️⃣ [피드백 완벽 반영] 핏 적합도 영역을 가장 상단으로 리프팅! */}
+            {/* 1️⃣ 핏 적합도 영역 */}
             <div style={{ display: "flex", flexDirection: "column", gap: "2px", marginBottom: "4px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                 <span style={{ fontSize: "9px", fontWeight: "bold", color: "#71717a" }}>핏 적합도</span>
-                {/* ⓘ 도움말 안내 가이드 버튼 탑재! */}
                 <span
                   onClick={() => setShowFitGuideModal(true)}
                   style={{
@@ -2458,7 +2482,6 @@ export default function Dashboard_Main() {
                 <div style={{ fontSize: "20px", fontWeight: "900", color: matchRate >= 85 ? "#10b981" : matchRate >= 75 ? "#f59e0b" : "#ef4444", fontFamily: "var(--font-pixel)", lineHeight: "1" }}>
                   {matchRate}%
                 </div>
-                {/* 🟢 직관적인 핏 안전 등급 라벨 */}
                 <span style={{
                   fontSize: "8.5px",
                   fontWeight: "900",
@@ -2470,7 +2493,7 @@ export default function Dashboard_Main() {
               </div>
             </div>
 
-            {/* 2️⃣ [피드백 완벽 반영] 10개 점수 닷 인디케이터를 핏 적합도 바로 아래로 리프팅! */}
+            {/* 2️⃣ 10개 점수 닷 인디케이터 */}
             <div style={{ display: "flex", gap: "3px", marginBottom: "10px" }}>
               {Array.from({ length: 10 }).map((_, i) => {
                 const isActive = i < Math.round(matchRate / 10);
@@ -2488,10 +2511,9 @@ export default function Dashboard_Main() {
               })}
             </div>
 
-            {/* 3️⃣ [피드백 완벽 반영] 핏 조언 텍스트를 하단으로 내리고 초간결 조건부 렌더링! */}
+            {/* 3️⃣ 핏 조언 텍스트 */}
             {(() => {
               const { warnComment, goodComment } = getDynamicFitComments(selectedProduct);
-              // 💡 [피드백 완벽 반영] 85점 미만(Caution/Warning)일 때는 부정 경고만 출력, 85점 이상(Good Fit)일 때는 긍정 칭찬만 출력!
               const isGood = matchRate >= 85;
               return (
                 <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
@@ -2547,9 +2569,9 @@ export default function Dashboard_Main() {
             기준 옷 변경
           </button>
 
-          {/* 체형 정보 추가 입력 */}
+          {/* ar 피팅 */}
           <button
-            onClick={() => setActiveAlert("AI Fit Advisor")}
+            onClick={() => setActiveAlert("ar 피팅")}
             style={{
               flex: 1,
               background: "#ffffff",
@@ -2570,7 +2592,7 @@ export default function Dashboard_Main() {
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
               <circle cx="12" cy="7" r="4" />
             </svg>
-            체형 정보 추가 입력
+            ar 피팅
           </button>
         </div>
 
@@ -4309,7 +4331,7 @@ export default function Dashboard_Main() {
           boxSizing: "border-box"
         }}>
           <h4 style={{ fontSize: "14px", fontWeight: "900", color: "#18181b", marginBottom: "20px" }}>
-            &apos;{activeAlert}&apos; 서비스 준비 중
+            {activeAlert === "ar 피팅" ? "ar 피팅 서비스 준비 중" : `'${activeAlert}' 서비스 준비 중`}
           </h4>
 
           <button
@@ -4856,49 +4878,96 @@ export default function Dashboard_Main() {
   // ==========================================
   // 글로벌 하단 고정 내비게이션 바 (position: sticky 기법을 통해 부모 컨테이너 너비 밀착 정렬 완성!)
   // ==========================================
+  // ==========================================
+  // 글로벌 하단 고정 내비게이션 바 (position: sticky 기법을 통해 부모 컨테이너 너비 밀착 정렬 완성!)
+  // ==========================================
+  // ==========================================
+  // 글로벌 하단 고정 내비게이션 바 (position: sticky 기법을 통해 부모 컨테이너 너비 밀착 정렬 완성!)
+  // ==========================================
+  // ==========================================
+  // 글로벌 하단 고정 내비게이션 바 (position: sticky 기법을 통해 부모 컨테이너 너비 밀착 정렬 완성!)
+  // ==========================================
   const renderGlobalBottomNav = () => {
     if (view === "resell_register" || view === "payment") return null;
 
     const tabs = [
-      { id: "main", label: "Home", type: "home" },
-      { id: "chat", label: "Chat", type: "chat" },
-      { id: "saved", label: "Saved", type: "heart" },
-      { id: "my", label: "My", type: "user" }
+      { id: "main", label: "home", type: "home" },
+      { id: "chat", label: "chat", type: "chat" },
+      { id: "saved", label: "saved", type: "heart" },
+      { id: "my", label: "my", type: "user" }
     ];
 
-    // 하단 탭용 얇고 고급스러운 1.8px 라인아트 SVG 렌더러
+    // 👾 유저님이 올려주신 reference 이미지 속 극강의 레트로 8x8 픽셀 아트 아이콘 렌더러
     const renderTabIcon = (type, isSelected) => {
-      const color = isSelected ? "#111111" : "#9ca3af";
+      const color = isSelected ? "#ffffff" : "#52525b"; // 선택됨: 리얼화이트, 비선택: 딥 징크그레이
+
+      // 각 픽셀 아트별 정밀 도트 좌표계 (가로 7px * 세로 7px) - 100% 균일한 수평 Baseline (y=1~6) 정렬 완성!
+      let coords = [];
       switch (type) {
         case "home":
-          return (
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-              <polyline points="9 22 9 12 15 12 15 22" />
-            </svg>
-          );
+          // 귀여운 픽셀 집 모양 (y좌표를 +1 평행 이동하여 다른 아이콘들과 세로 중심축을 100% 일치시킴!)
+          coords = [
+            [3, 1],
+            [2, 2], [3, 2], [4, 2],
+            [1, 3], [2, 3], [3, 3], [4, 3], [5, 3],
+            [1, 4], [5, 4],
+            [1, 5], [3, 5], [5, 5],
+            [1, 6], [5, 6]
+          ];
+          break;
         case "chat":
-          return (
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-            </svg>
-          );
+          // ㄷ자를 회전시켜 꼬리를 단 귀여운 픽셀 말풍선 (y=1~6)
+          coords = [
+            [1, 1], [2, 1], [3, 1], [4, 1], [5, 1],
+            [1, 2], [5, 2],
+            [1, 3], [5, 3],
+            [1, 4], [2, 4], [3, 4], [4, 4], [5, 4],
+            [5, 5],
+            [4, 6]
+          ];
+          break;
         case "heart":
-          return (
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-            </svg>
-          );
+          // 정밀 대칭형 클래식 픽셀 하트 (y=1~6)
+          coords = [
+            [1, 1], [5, 1],
+            [0, 2], [1, 2], [2, 2], [4, 2], [5, 2], [6, 2],
+            [0, 3], [1, 3], [2, 3], [3, 3], [4, 3], [5, 3], [6, 3],
+            [1, 4], [2, 4], [3, 4], [4, 4], [5, 4],
+            [2, 5], [3, 5], [4, 5],
+            [3, 6]
+          ];
+          break;
         case "user":
-          return (
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
-            </svg>
-          );
+          // 머리가 둥둥 떠 있고 몸통 기둥이 내려오는 픽셀 미니 캐릭터 (y=1~6)
+          coords = [
+            [3, 1],
+            [2, 2], [3, 2], [4, 2],
+            [3, 3],
+            [2, 4], [3, 4], [4, 4],
+            [1, 5], [2, 5], [3, 5], [4, 5], [5, 5],
+            [1, 6], [5, 6]
+          ];
+          break;
         default:
           return null;
       }
+
+      return (
+        <svg 
+          width="16" // 📱 24px에서 16px로 콤팩트하게 줄여 텍스트와의 황금 비율 핏 확보!
+          height="16" 
+          viewBox="0 0 7 7" 
+          fill="none" 
+          xmlns="http://www.w3.org/2000/svg"
+          style={{ imageRendering: "pixelated", display: "block" }}
+        >
+          <g fill={color}>
+            {coords.map(([x, y], idx) => (
+              <rect key={`${type}-${idx}`} x={x} y={y} width="1" height="1" shapeRendering="crispEdges" />
+            ))}
+          </g>
+        </svg>
+      );
     };
 
     return (
@@ -4906,14 +4975,16 @@ export default function Dashboard_Main() {
         position: "sticky",
         bottom: 0,
         width: "100%",
-        height: "56px",
-        background: "#ffffff",
-        borderTop: "1px solid #e5e7eb",
+        height: "58px", // 📱 아주 슬림하고 세련된 58px 높이
+        background: "#000000", // 🖤 완전무결한 딥 블랙 배경
+        borderTop: "1px solid rgba(255, 255, 255, 0.1)", // 얇고 시크한 라인
         display: "flex",
-        justifyContent: "space-around",
+        justifyContent: "space-around", // 📱 양옆 대칭형으로 완벽하게 등간격 배분!
         alignItems: "center",
+        padding: "0 28px", // 📱 좌우 28px 사이드 여백을 주어 양끝 탭이 가장자리에 쏠리지 않는 안정감 선사!
+        paddingBottom: "2px", // 모바일 안전 영역 균형감 유지
         zIndex: 200,
-        boxShadow: "0 -2px 10px rgba(0,0,0,0.03)",
+        boxShadow: "0 -4px 20px rgba(0,0,0,0.5)",
         userSelect: "none"
       }}>
         {tabs.map((tab) => {
@@ -4933,19 +5004,22 @@ export default function Dashboard_Main() {
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
+                justifyContent: "center",
                 cursor: "pointer",
-                padding: "4px 0",
-                width: "60px",
+                padding: "2px 0",
+                width: "56px", // 균일한 황금 슬롯 폭
                 transition: "all 0.2s"
               }}
             >
               {renderTabIcon(tab.type, isSelected)}
               <span className="bottom-nav-label" style={{
                 fontFamily: "var(--font-pixel)",
-                fontSize: "7px",
-                color: isSelected ? "#111111" : "#9ca3af",
-                marginTop: "4px",
-                fontWeight: isSelected ? "bold" : "normal"
+                fontSize: "9px", // 📱 7px에서 9px로 키워 레트로 가독성과 비율을 찰떡으로 튜닝!
+                color: isSelected ? "#ffffff" : "#52525b", // 백색 & Zinc-600 그레이 대비
+                marginTop: "6px", // 아이콘과의 완벽한 수직 거리 확보
+                fontWeight: isSelected ? "bold" : "normal",
+                textTransform: "lowercase", // 🔤 무조건 소문자로 고정!
+                textAlign: "center"
               }}>
                 {tab.label}
               </span>

@@ -2,7 +2,7 @@
 
 /* 바디 전체에 심오한 다크 프리미엄 배경 무드 주입 */
 body {
-  background-color: #050507 !important;
+  background-color: #000000 !important;
 }
 
 /* 모바일 전용 프리미엄 앱 프레임 컨테이너 */
@@ -17,7 +17,7 @@ body {
   margin: 0 auto;
   padding: 40px 20px;
   box-sizing: border-box;
-  background-color: #09090b; /* 시크한 딥 차콜 블랙 */
+  background-color: #000000; /* 완전무결한 딥 블랙 스왑! */
   border-left: 1px solid rgba(255, 255, 255, 0.05);
   border-right: 1px solid rgba(255, 255, 255, 0.05);
   box-shadow: 0 0 60px rgba(0, 0, 0, 0.85);

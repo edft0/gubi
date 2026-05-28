@@ -196,20 +196,19 @@ export default function Step3_DetailedFit() {
                     {fit.desc}
                   </p>
                 </div>
-                <div style={{ marginLeft: "auto" }}>
-                  <div style={{
-                    width: "18px",
-                    height: "18px",
-                    borderRadius: "50%",
-                    border: `2px solid ${isSelected ? "#ffffff" : "var(--text-muted)"}`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center"
-                  }}>
-                    {isSelected && (
-                      <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#ffffff" }}></div>
-                    )}
-                  </div>
+                <div style={{ marginLeft: "auto", minWidth: "20px", display: "flex", justifyContent: "center", alignItems: "center" }}>
+                  {isSelected && (
+                    <span style={{
+                      fontFamily: "var(--font-pixel)",
+                      fontSize: "20px",
+                      color: "#ffffff",
+                      lineHeight: "1",
+                      userSelect: "none",
+                      textShadow: "2.5px 2.5px 0px #3f3f3f" // 👾 3D 입체 픽셀 그림자 완벽 동기화!
+                    }}>
+                      v
+                    </span>
+                  )}
                 </div>
               </div>
             );
@@ -228,8 +227,8 @@ export default function Step3_DetailedFit() {
           <button
             disabled={!isAnyOptionSelected}
             onClick={handleNext}
-            style={{ 
-              flex: 2, 
+            style={{
+              flex: 2,
               padding: "16px",
               borderRadius: "12px",
               fontWeight: "800",
@@ -343,9 +342,9 @@ export default function Step3_DetailedFit() {
               border: "1px solid rgba(245, 158, 11, 0.25)"
             }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
-                <line x1="12" y1="9" x2="12" y2="13"/>
-                <line x1="12" y1="17" x2="12.01" y2="17"/>
+                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                <line x1="12" y1="9" x2="12" y2="13" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
               </svg>
             </div>
 
