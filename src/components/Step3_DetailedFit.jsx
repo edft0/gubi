@@ -1,6 +1,7 @@
 // src/components/Step3_DetailedFit.jsx
 import React, { useState } from "react";
 import { useFitProfile } from "../context/FitProfileContext";
+import PixelPerfectCheck from "./PixelPerfectCheck";
 
 export default function Step3_DetailedFit() {
   const { profile, updateDetailedFit, setStep } = useFitProfile();
@@ -198,16 +199,7 @@ export default function Step3_DetailedFit() {
                 </div>
                 <div style={{ marginLeft: "auto", minWidth: "20px", display: "flex", justifyContent: "center", alignItems: "center" }}>
                   {isSelected && (
-                    <span style={{
-                      fontFamily: "var(--font-pixel)",
-                      fontSize: "20px",
-                      color: "#ffffff",
-                      lineHeight: "1",
-                      userSelect: "none",
-                      textShadow: "2.5px 2.5px 0px #3f3f3f" // 👾 3D 입체 픽셀 그림자 완벽 동기화!
-                    }}>
-                      v
-                    </span>
+                    <PixelPerfectCheck size={24} />
                   )}
                 </div>
               </div>

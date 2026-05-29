@@ -1,5 +1,6 @@
 // src/context/FitProfileContext.jsx
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { supabase } from "../supabaseClient";
 
 const FitProfileContext = createContext(null);
 
@@ -72,17 +73,17 @@ const initialProfileState = {
     name: "",
     provider: ""
   },
-  step: 0, 
+  step: 0,
   basicInfo: {
-    nickname: "", 
-    gender: "", 
-    height: "", 
-    weight: "", 
-    usualSize: "", 
-    sizeType: "alphabet" 
+    nickname: "",
+    gender: "",
+    height: "",
+    weight: "",
+    usualSize: "",
+    sizeType: "alphabet"
   },
-  measureMethod: null, 
-  
+  measureMethod: null,
+
   directMeasure: {
     category: "tshirt",
     shoulder: "",
@@ -116,8 +117,8 @@ const initialProfileState = {
   },
 
   detailedFit: {
-    bodyCharacteristics: [], 
-    preferredFit: "" 
+    bodyCharacteristics: [],
+    preferredFit: ""
   },
 
   usersList: defaultUsersList
@@ -148,6 +149,50 @@ export const FitProfileProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem("gubi_fit_profile", JSON.stringify(profile));
   }, [profile]);
+
+  // Supabase로부터 가입 회원 정보를 전부 가져와 usersList를 동기화하는 함수
+  const fetchUsersFromSupabase = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*");
+
+      if (error) {
+        console.error("❌ Supabase 데이터 조회 에러:", error.message);
+        return;
+      }
+
+      if (data) {
+        const formattedUsers = data.map(item => ({
+          nickname: item.nickname,
+          gender: item.gender,
+          height: item.height,
+          weight: item.weight,
+          usualSize: item.usual_size,
+          preferredFit: item.preferred_fit,
+          bodyCharacteristics: item.body_characteristics || [],
+          baseClothesList: {
+            tshirt: item.tshirt_summary || "미등록 (스킵함)",
+            hoodie: item.hoodie_summary || "미등록 (스킵함)",
+            outer: item.outer_summary || "미등록 (스킵함)",
+            pants: item.pants_summary || "미등록 (스킵함)"
+          }
+        }));
+
+        setProfile(prev => ({
+          ...prev,
+          usersList: formattedUsers
+        }));
+        console.log("💚 Supabase에서 회원 목록을 성공적으로 불러왔습니다!");
+      }
+    } catch (err) {
+      console.error("⚠️ Supabase 불러오기 오류:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsersFromSupabase();
+  }, []);
 
   const setStep = (newStep) => {
     setProfile(prev => ({ ...prev, step: newStep }));
@@ -276,7 +321,7 @@ export const FitProfileProvider = ({ children }) => {
   };
 
   // 4차원 기준의류 결합 구조로 회원 가입 DB를 업사이드 적재하는 어드밴스드 알고리즘 완공!
-  const saveUserToVirtualDB = () => {
+  const saveUserToVirtualDB = async () => {
     const { basicInfo, detailedFit } = profile;
     if (!basicInfo.nickname) return;
 
@@ -295,17 +340,44 @@ export const FitProfileProvider = ({ children }) => {
       weight: Number(basicInfo.weight) || 70,
       usualSize: basicInfo.usualSize || "M",
       preferredFit: detailedFit.preferredFit || "regular",
-      bodyCharacteristics: detailedFit.bodyCharacteristics && detailedFit.bodyCharacteristics.length > 0 
-        ? detailedFit.bodyCharacteristics 
+      bodyCharacteristics: detailedFit.bodyCharacteristics && detailedFit.bodyCharacteristics.length > 0
+        ? detailedFit.bodyCharacteristics
         : ["특이사항 없음"],
       baseClothesList: baseClothesList
     };
+
+    // ☁️ [클라우드 연동] 실제 Supabase DB에 회원 가입 및 온보딩 실측 요약 정보 전송!
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .upsert({
+          nickname: newUser.nickname,
+          gender: newUser.gender,
+          height: newUser.height,
+          weight: newUser.weight,
+          usual_size: newUser.usualSize,
+          preferred_fit: newUser.preferredFit,
+          body_characteristics: newUser.bodyCharacteristics,
+          tshirt_summary: baseClothesList.tshirt,
+          hoodie_summary: baseClothesList.hoodie,
+          outer_summary: baseClothesList.outer,
+          pants_summary: baseClothesList.pants
+        }, { onConflict: "nickname" });
+
+      if (error) {
+        console.error("❌ Supabase 저장 에러 발생:", error.message);
+      } else {
+        console.log("💚 Supabase에 가입 정보 저장 성공!", data);
+      }
+    } catch (err) {
+      console.error("⚠️ Supabase 통신 에러:", err);
+    }
 
     setProfile(prev => {
       const currentList = prev.usersList && prev.usersList.length > 0 ? prev.usersList : defaultUsersList;
       const filtered = currentList.filter(u => u.nickname.toLowerCase() !== newUser.nickname.toLowerCase());
       const updatedList = [...filtered, newUser];
-      
+
       return {
         ...prev,
         usersList: updatedList
@@ -313,8 +385,23 @@ export const FitProfileProvider = ({ children }) => {
     });
   };
 
-  // 가상 DB에서 특정 고객 삭제
-  const deleteUserFromVirtualDB = (nickname) => {
+  // 가상 DB 및 실제 Supabase DB에서 특정 고객 삭제
+  const deleteUserFromVirtualDB = async (nickname) => {
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .delete()
+        .eq("nickname", nickname);
+
+      if (error) {
+        console.error("❌ Supabase에서 회원 삭제 중 오류 발생:", error.message);
+      } else {
+        console.log(`💚 Supabase에서 '${nickname}' 회원 정보 삭제 완료!`);
+      }
+    } catch (err) {
+      console.error("⚠️ Supabase 삭제 통신 오류:", err);
+    }
+
     setProfile(prev => {
       const currentList = prev.usersList && prev.usersList.length > 0 ? prev.usersList : defaultUsersList;
       const updatedList = currentList.filter(u => u.nickname.toLowerCase() !== nickname.toLowerCase());
@@ -341,11 +428,11 @@ export const FitProfileProvider = ({ children }) => {
 
   const getFitAccuracy = () => {
     const { step, directMeasures, dbMeasures, detailedFit } = profile;
-    
+
     if (step === 0) return 0;
-    
+
     let score = 25;
-    
+
     const t = directMeasures.tshirt;
     const tDirectFilled = t.length > 0 && t.shoulder > 0 && t.chest > 0 && t.sleeve > 0;
     const tDbFilled = dbMeasures && dbMeasures.tshirt !== null && !dbMeasures.tshirt.isSkipped && dbMeasures.tshirt.size !== "없음" && dbMeasures.tshirt.size !== "";
@@ -403,6 +490,7 @@ export const FitProfileProvider = ({ children }) => {
         getFitAccuracy,
         saveUserToVirtualDB,
         deleteUserFromVirtualDB,
+        fetchUsersFromSupabase, // 수동 동기화 함수 노출
         logout // 영속 로그아웃 함수 바인딩 노출!
       }}
     >

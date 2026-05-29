@@ -1,6 +1,7 @@
 // src/components/AdminDashboard.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useFitProfile } from "../context/FitProfileContext";
+import { supabase } from "../supabaseClient";
 
 export default function AdminDashboard() {
   const { profile, setStep, deleteUserFromVirtualDB } = useFitProfile();
@@ -10,6 +11,54 @@ export default function AdminDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
 
+  // ☁️ Supabase 클라우드 실시간 회원 가입 목록 상태 관리
+  const [supabaseUsers, setSupabaseUsers] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const fetchSupabaseUsers = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) {
+        console.error("Error fetching users:", error.message);
+      } else if (data && data.length > 0) {
+        const mapped = data.map(p => ({
+          nickname: p.nickname,
+          gender: p.gender,
+          height: p.height,
+          weight: p.weight,
+          usualSize: p.usual_size,
+          preferredFit: p.preferred_fit,
+          bodyCharacteristics: p.body_characteristics || [],
+          baseClothesList: {
+            tshirt: p.tshirt_summary || "미등록",
+            hoodie: p.hoodie_summary || "미등록",
+            outer: p.outer_summary || "미등록",
+            pants: p.pants_summary || "미등록"
+          },
+          created_at: p.created_at
+        }));
+        setSupabaseUsers(mapped);
+      } else {
+        setSupabaseUsers([]);
+      }
+    } catch (err) {
+      console.error("Supabase fetch error:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSupabaseUsers();
+  }, []);
+
+  // Supabase 실시간 회원이 존재하면 사용하고, 없으면 기존의 로컬 가상 회원 리스트(fallback)를 사용합니다.
+  const activeUsersList = supabaseUsers.length > 0 ? supabaseUsers : (usersList || []);
+
   // 선호핏 한글 매핑 헬퍼
   const getPreferredFitKo = (fit) => {
     if (fit === "slim") return "슬림핏";
@@ -18,7 +67,7 @@ export default function AdminDashboard() {
   };
 
   // 검색 필터링
-  const filteredUsers = (usersList || []).filter(u =>
+  const filteredUsers = activeUsersList.filter(u =>
     u.nickname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     u.usualSize?.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -39,9 +88,9 @@ export default function AdminDashboard() {
   const topClickedProducts = getProductClicks();
 
   // 👥 [성별 분포 비율 연산]
-  const totalUsersCount = (usersList || []).length;
-  const maleCount = (usersList || []).filter(u => u.gender === "남").length;
-  const femaleCount = (usersList || []).filter(u => u.gender === "여").length;
+  const totalUsersCount = activeUsersList.length;
+  const maleCount = activeUsersList.filter(u => u.gender === "남").length;
+  const femaleCount = activeUsersList.filter(u => u.gender === "여").length;
   const maleRatio = totalUsersCount > 0 ? Math.round((maleCount / totalUsersCount) * 100) : 50;
   const femaleRatio = totalUsersCount > 0 ? Math.round((femaleCount / totalUsersCount) * 100) : 50;
 
@@ -82,9 +131,27 @@ export default function AdminDashboard() {
   };
 
   // 회원 삭제 핸들러
-  const handleDelete = (e, nickname) => {
+  const handleDelete = async (e, nickname) => {
     e.stopPropagation(); // 행 클릭 이벤트 전파 차단!
     if (window.confirm(`정말 '${nickname}' 회원의 데이터를 삭제하시겠습니까? (복구 불가능)`)) {
+      // 1. Supabase 클라우드 DB에서 실시간 삭제
+      try {
+        const { error } = await supabase
+          .from("profiles")
+          .delete()
+          .eq("nickname", nickname);
+        if (error) {
+          console.error("❌ Supabase 삭제 에러:", error.message);
+        } else {
+          console.log("💚 Supabase 삭제 성공:", nickname);
+          // 실시간으로 대시보드 리스트 리로드
+          fetchSupabaseUsers();
+        }
+      } catch (err) {
+        console.error("Supabase delete connection error:", err);
+      }
+
+      // 2. 기존의 로컬 가상 DB에서도 동시 제거
       deleteUserFromVirtualDB(nickname);
       if (selectedUser?.nickname === nickname) {
         setSelectedUser(null);
@@ -113,7 +180,21 @@ export default function AdminDashboard() {
               display: "inline-block",
               boxShadow: "0 0 10px #ef4444"
             }}></span>
-            <h1 style={{ fontSize: "24px", fontWeight: "900", letterSpacing: "1px", margin: 0 }}>GUBI ADMIN PANEL</h1>
+             <h1 style={{ fontSize: "24px", fontWeight: "900", letterSpacing: "1px", margin: 0, display: "flex", alignItems: "center", gap: "10px" }}>
+              GUBI ADMIN PANEL
+              <span style={{
+                fontSize: "10px",
+                fontWeight: "bold",
+                padding: "3px 8px",
+                borderRadius: "20px",
+                background: supabaseUsers.length > 0 ? "rgba(16, 185, 129, 0.15)" : "rgba(245, 158, 11, 0.15)",
+                color: supabaseUsers.length > 0 ? "#34d399" : "#fbbf24",
+                border: supabaseUsers.length > 0 ? "1px solid rgba(16, 185, 129, 0.3)" : "1px solid rgba(245, 158, 11, 0.3)",
+                letterSpacing: "0"
+              }}>
+                {supabaseUsers.length > 0 ? "☁️ CLOUD LIVE" : "💾 LOCAL MOCK"}
+              </span>
+            </h1>
           </div>
           <p style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "4px" }}>
             gubi / 1234 최고관리자 권한 가동 중

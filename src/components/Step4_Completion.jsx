@@ -1,6 +1,7 @@
 // src/components/Step4_Completion.jsx
 import React, { useEffect, useState } from "react";
 import { useFitProfile } from "../context/FitProfileContext";
+import PixelPerfectCheck from "./PixelPerfectCheck";
 
 export default function Step4_Completion() {
   const { profile, setStep, getFitAccuracy, saveUserToVirtualDB } = useFitProfile();
@@ -43,16 +44,7 @@ export default function Step4_Completion() {
 
       {/* 완공 마크 - 픽셀 체크 스타일 구현 (오직 v 글리프 단독 거대 투사 + 3D 픽셀 입체 섀도우) */}
       <div style={{ display: "flex", justifyContent: "center", marginBottom: "24px" }}>
-        <span style={{
-          fontSize: "80px", // 네모 상자가 빠졌으므로 거대하게 극대화!
-          color: "#ffffff",
-          fontFamily: "var(--font-pixel)",
-          lineHeight: "1",
-          userSelect: "none",
-          textShadow: "6px 6px 0px #3f3f3f" // 👾 캡처와 소름 돋게 똑같은 8비트 입체 픽셀 그림자 완벽 매칭!
-        }}>
-          v
-        </span>
+        <PixelPerfectCheck size={110} />
       </div>
 
       {/* 성공 타이틀 (픽셀 톤앤매너 싱크 및 띄어쓰기 박멸!) */}
@@ -234,7 +226,7 @@ export default function Step4_Completion() {
           e.currentTarget.style.boxShadow = "0 8px 24px rgba(255, 255, 255, 0.15)";
         }}
       >
-        START ↩
+        START
       </button>
     </div>
   );

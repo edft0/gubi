@@ -1,6 +1,7 @@
 // src/components/Step2_MethodSelection.jsx
 import React from "react";
 import { useFitProfile } from "../context/FitProfileContext";
+import PixelPerfectCheck from "./PixelPerfectCheck";
 
 export default function Step2_MethodSelection() {
   const { profile, setMeasureMethod, setStep } = useFitProfile();
@@ -81,16 +82,7 @@ export default function Step2_MethodSelection() {
           </div>
           <div style={{ marginLeft: "auto", minWidth: "24px", display: "flex", justifyContent: "center", alignItems: "center" }}>
             {measureMethod === "direct" && (
-              <span style={{
-                fontFamily: "var(--font-pixel)",
-                fontSize: "22px",
-                color: "#ffffff",
-                lineHeight: "1",
-                userSelect: "none",
-                textShadow: "2.5px 2.5px 0px #3f3f3f" // 👾 3D 입체 픽셀 그림자 완벽 동기화!
-              }}>
-                v
-              </span>
+              <PixelPerfectCheck size={28} />
             )}
           </div>
         </div>
@@ -146,16 +138,7 @@ export default function Step2_MethodSelection() {
           </div>
           <div style={{ marginLeft: "auto", minWidth: "24px", display: "flex", justifyContent: "center", alignItems: "center" }}>
             {measureMethod === "db" && (
-              <span style={{
-                fontFamily: "var(--font-pixel)",
-                fontSize: "22px",
-                color: "#ffffff",
-                lineHeight: "1",
-                userSelect: "none",
-                textShadow: "2.5px 2.5px 0px #3f3f3f" // 👾 3D 입체 픽셀 그림자 완벽 동기화!
-              }}>
-                v
-              </span>
+              <PixelPerfectCheck size={28} />
             )}
           </div>
         </div>
